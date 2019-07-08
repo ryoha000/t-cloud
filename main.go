@@ -62,6 +62,9 @@ func sofmap(jan string) {
 		utfBody := transform.NewReader(bufio.NewReader(res.Body), japanese.ShiftJIS.NewDecoder())
 	 
 		doc, err := goquery.NewDocumentFromReader(utfBody)
+		if err != nil{
+		  panic(err)
+		}
 	 
 		// 掲載イベントURL一覧を取得
 		// doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn").Each(func(i int, s *goquery.Selection) {
@@ -100,6 +103,10 @@ func sofmap(jan string) {
 		utfBody := transform.NewReader(bufio.NewReader(res.Body), japanese.ShiftJIS.NewDecoder())
 	 
 		doc, err := goquery.NewDocumentFromReader(utfBody)
+		if err != nil{
+			panic(err)
+		}
+
 	 
 
 		var urls [6]string
