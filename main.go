@@ -96,7 +96,7 @@ func sofmap(jan string) {
 		//goquery、ページを取得
 		res, err := http.Get(url)
 		if err != nil {
-			// handle error
+			panic(err)		
 		}
 		defer res.Body.Close()
 	 
