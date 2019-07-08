@@ -30,21 +30,13 @@ func amazon(as string) {
  
 	doc, err := goquery.NewDocumentFromReader(utfBody)
  
-	// 掲載イベントURL一覧を取得
-	// doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn").Each(func(i int, s *goquery.Selection) {
-	// 	// ブログのタイトルとタグを取得
-	// 	title := s.Find("span").Text()
-	
-	// 	fmt.Printf(title)
-	//   })
-	a := doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn > span.a-size-large.a-color-price.olpOfferPrice.a-text-bold").Text()
-	b := doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn > p > span > span.olpShippingPrice").Text()
-	fmt.Println(a[23:])
-	c := strings.Index(b, "5")
-	if c == -1 {
-		fmt.Printf("")
+	hontai := doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn > span.a-size-large.a-color-price.olpOfferPrice.a-text-bold").Text()
+	souryo := doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn > p > span > span.olpShippingPrice").Text()
+	fmt.Println("Amazon：￥" + hontai[23:])
+	if len(souryo) < 6 {
+		fmt.Printf("送料無料")
 	} else {
-		fmt.Println(b[7:])
+		fmt.Println("送料：￥" + souryo[7:])
 	}
 }
 
@@ -82,14 +74,15 @@ func sofmap(jan string) {
 		} else {
 			fmt.Println(b[7:])
 		}
-	}
-	func failOnError(err error) {
+}
+
+func failOnError(err error) {
 		if err != nil {
 			log.Fatal("Error:", err)
 		}
-	}
+}
 
-	func surugaya(jan string) {
+func surugaya(jan string) {
 		//スクレイピング対象URLを設定
 		url := "https://www.suruga-ya.jp/search?category=&search_word=&bottom_detail_search_bookmark=1&gtin=" + jan + "&id_s=&jan10=&mpn="
 	 
@@ -113,12 +106,12 @@ func sofmap(jan string) {
 		for i := 1; i < 4; i++ {
 			var s string
 			s = strconv.Itoa(i)
-			a := doc.Find("#search_result > div > div:nth-child(" + s + ") > div.item_price > p:nth-child(1) > span > strong")
-			if a == nil {
+			kakaku := doc.Find("#search_result > div > div:nth-child(" + s + ") > div.item_price > p:nth-child(1) > span > strong")
+			if len(kakaku.Text()) < 5 {
 				urls[i-1] = ""
 			} else {
-				urls[i-1] = a.Text()
-				fmt.Println(urls[i-1][6:])
+				urls[i-1] = kakaku.Text()
+				fmt.Println("駿河屋：￥" + urls[i-1][6:])
 				           
 			}
 			
@@ -127,40 +120,14 @@ func sofmap(jan string) {
 			var v string
 			v = strconv.Itoa(i)
 			b := doc.Find("#search_result > div:nth-child(2) > div:nth-child(" + v + ") > div.item_price > p:nth-child(1) > span > strong")
-			if b == nil {
+			if len(b.Text()) < 5 {
 				urls[i-1] = ""
 			} else {
 				urls[i+2] = b.Text()
 				fmt.Println(urls[i+2][6:])
 			}
 		}
-
-		// var exist bool
-		// doc.Find("#search_result > div > div > div.item_detail > p.title ").Each(func(_ int, s *goquery.Selection) {
-		// 	url, exist := s.Attr("a")
-		// })
-		// if !exist {
-		// 	url:
-		// 	return
-		// }
-		// fmt.Println(url)
-		// return
-
-
-
-
-		// if c == -1 {
-		// 	fmt.Printf("")
-		// } else {
-		// 	fmt.Println(b[7:])
-		// }
-	}
-
-	// doc, err := goquery.NewDocument("https://www.amazon.co.jp/gp/offer-listing/B009EOUIAK/ref=dp_olp_used?ie=UTF8&condition=used")
-    // if err != nil {
-    //     fmt.Print("url scarapping failed")
-    // }
-    
+}
 
 
 func main() {
@@ -170,10 +137,16 @@ func main() {
 	asin[2] = "B01N5OI9Z1"
 	asin[3] = "B079TNNZ2R"
 
+	var jan [4]string
+	jan[0] = "4571382081018"
+	jan[1] = "4571382081452"
+	jan[2] = "4571382081568"
+	jan[3] = "4571382081773"
+
 	for i := 0; i < len(asin); i++ {
-		// amazon(asin[i])
+		amazon(asin[i])
+		surugaya(jan[i])
 	}
-	surugaya("4935066303665")
 }
 
 

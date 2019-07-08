@@ -39,3 +39,4 @@ with open("ebooks.csv", "w", encoding='utf-8') as file:
         for cell in row.findAll(['td', 'th']):
             csvRow.append(cell.get_text())
         writer.writerow(csvRow)
+
