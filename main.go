@@ -1,4 +1,4 @@
-package main
+package hello
 
 import (
 	"fmt"
@@ -15,7 +15,7 @@ import (
 	// "os"
 )
 
-func amazon(as string) {
+func amazon(as string)(hontai string,souryo string) {
 	//スクレイピング対象URLを設定
 	sc_url := "https://www.amazon.co.jp/gp/offer-listing/" + as + "/ref=dp_olp_used?ie=UTF8&condition=used"
  
@@ -30,14 +30,15 @@ func amazon(as string) {
  
 	doc, err := goquery.NewDocumentFromReader(utfBody)
  
-	hontai := doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn > span.a-size-large.a-color-price.olpOfferPrice.a-text-bold").Text()
-	souryo := doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn > p > span > span.olpShippingPrice").Text()
+	hontai = doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn > span.a-size-large.a-color-price.olpOfferPrice.a-text-bold").Text()
+	souryo = doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn > p > span > span.olpShippingPrice").Text()
 	fmt.Println("Amazon：￥" + hontai[23:])
 	if len(souryo) < 6 {
 		fmt.Printf("送料無料")
 	} else {
 		fmt.Println("送料：￥" + souryo[7:])
 	}
+	return hontai,souryo
 }
 
 func sofmap(jan string) {
@@ -82,14 +83,13 @@ func failOnError(err error) {
 		}
 }
 
-func surugaya(jan string) {
+func surugaya(jan string) (urls[6] string) {
 		//スクレイピング対象URLを設定
 		url := "https://www.suruga-ya.jp/search?category=&search_word=&bottom_detail_search_bookmark=1&gtin=" + jan + "&id_s=&jan10=&mpn="
 	 
 		//goquery、ページを取得
 		res, err := http.Get(url)
 		if err != nil {
-			panic(err)		
 		}
 		defer res.Body.Close()
 	 
@@ -102,7 +102,7 @@ func surugaya(jan string) {
 
 	 
 
-		var urls [6]string
+		// var urls [6]string
 		for i := 1; i < 4; i++ {
 			var s string
 			s = strconv.Itoa(i)
@@ -127,10 +127,14 @@ func surugaya(jan string) {
 				fmt.Println(urls[i+2][6:])
 			}
 		}
+		return urls
 }
 
+func init() {
+    http.HandleFunc("/", handler)
+}
 
-func main() {
+func handler(w http.ResponseWriter, r *http.Request) {
 	var asin [4]string
 	asin[0] = "B006LE5LA8"
 	asin[1] = "B01M03YDPX"
@@ -144,9 +148,20 @@ func main() {
 	jan[3] = "4571382081773"
 
 	for i := 0; i < len(asin); i++ {
-		amazon(asin[i])
-		surugaya(jan[i])
+		hontai,souryo := amazon(asin[1])
+		fmt.Fprint(w,"Amazon:￥" + hontai[23:])
+		fmt.Fprint(w,"送料:￥" + souryo[7:])
+		urls := surugaya(jan[1])
+		for j := 0; j < 6; j++ {
+			if len(urls[j]) < 5{
+				fmt.Fprint(w,"")
+			} else {
+			fmt.Fprint(w,"駿河屋:￥" + urls[j][:6])
+			}
+		}
+		
 	}
+	fmt.Fprint(w,"駿河屋:￥")
 }
 
 
