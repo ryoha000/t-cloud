@@ -32,7 +32,11 @@ func amazon(as string)(hontai string,souryo string) {
  
 	hontai = doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn > span.a-size-large.a-color-price.olpOfferPrice.a-text-bold").Text()
 	souryo = doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn > p > span > span.olpShippingPrice").Text()
-	fmt.Println("Amazon：￥" + hontai[23:])
+	if len(hontai) < 10 {
+		fmt.Printf("中古なし。↓無視してください")
+	} else {
+		fmt.Println("Amazon：￥" + hontai[23:])
+	}
 	if len(souryo) < 6 {
 		fmt.Printf("送料無料")
 	} else {
