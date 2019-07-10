@@ -1,4 +1,4 @@
-package hello
+package main
 
 import (
 	"fmt"
@@ -131,11 +131,8 @@ func surugaya(jan string) (urls[6] string) {
 }
 
 
-func init() {
-    http.HandleFunc("/", handler)
-}
 
-func handler(w http.ResponseWriter, r *http.Request) {
+func main () {
 	var asin [4]string
 	asin[0] = "B006LE5LA8"
 	asin[1] = "B01M03YDPX"
