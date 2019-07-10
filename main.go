@@ -121,7 +121,7 @@ func surugaya(jan string) (urls[6] string) {
 			v = strconv.Itoa(i)
 			b := doc.Find("#search_result > div:nth-child(2) > div:nth-child(" + v + ") > div.item_price > p:nth-child(1) > span > strong")
 			if len(b.Text()) < 5 {
-				urls[i-1] = ""
+				urls[i+2] = ""
 			} else {
 				urls[i+2] = b.Text()
 				fmt.Println(urls[i+2][6:])
