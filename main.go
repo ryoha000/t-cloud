@@ -30,18 +30,19 @@ func amazon(as string)(hontai string,souryo string) {
  
 	doc, err := goquery.NewDocumentFromReader(utfBody)
  
-	hontai = doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn > span.a-size-large.a-color-price.olpOfferPrice.a-text-bold").Text()
+	hontai = doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn > span").Text()
 	souryo = doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn > p > span > span.olpShippingPrice").Text()
-	if len(hontai) < 10 {
-		fmt.Printf("中古なし。↓無視してください")
+	if len(hontai) < 1 {
+		fmt.Printf("中古なし")
 	} else {
 		fmt.Println("Amazon：￥" + hontai[23:])
+		if len(souryo) < 6 {
+			fmt.Printf("送料無料")
+		} else {
+			fmt.Println("送料：￥" + souryo[7:])
+		}
 	}
-	if len(souryo) < 6 {
-		fmt.Printf("送料無料")
-	} else {
-		fmt.Println("送料：￥" + souryo[7:])
-	}
+	
 	return hontai,souryo
 }
 
