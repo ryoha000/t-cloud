@@ -130,6 +130,7 @@ func surugaya(jan string) (urls[6] string) {
 		return urls
 }
 
+
 func init() {
     http.HandleFunc("/", handler)
 }
@@ -148,34 +149,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	jan[3] = "4571382081773"
 
 	for i := 0; i < len(asin); i++ {
-		hontai,souryo := amazon(asin[1])
-		fmt.Fprint(w,"Amazon:￥" + hontai[23:])
-		fmt.Fprint(w,"送料:￥" + souryo[7:])
-		urls := surugaya(jan[1])
-		for j := 0; j < 6; j++ {
-			if len(urls[j]) < 5{
-				fmt.Fprint(w,"")
-			} else {
-			fmt.Fprint(w,"駿河屋:￥" + urls[j][:6])
-			}
-		}
-		
+		amazon(asin[i])
+		surugaya(jan[i])
 	}
-	fmt.Fprint(w,"駿河屋:￥")
 }
-
-
-	
-		
-	
-
-
-
-// func toAbsUrl(baseurl *url.URL, weburl string) string {
-// 	relurl, err := url.Parse(weburl)
-// 	if err != nil {
-// 		return ""
-// 	}
-// 	absurl := baseurl.ResolveReference(relurl)
-// 	return absurl.String()
-// }
