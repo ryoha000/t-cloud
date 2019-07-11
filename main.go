@@ -41,6 +41,7 @@ func amazon(as string)(hontai string,souryo string) {
 		} else {
 			fmt.Println("送料：￥" + souryo[7:])
 		}
+		fmt.Printf("AmazonURL:" + sc_url)
 	}
 	
 	return hontai,souryo
@@ -88,7 +89,7 @@ func failOnError(err error) {
 		}
 }
 
-func surugaya(jan string) (urls[6] string) {
+func surugaya(jan string) (nedan[6] string,urls[6] string) {
 		//スクレイピング対象URLを設定
 		url := "https://www.suruga-ya.jp/search?category=&search_word=&bottom_detail_search_bookmark=1&gtin=" + jan + "&id_s=&jan10=&mpn="
 	 
@@ -107,32 +108,50 @@ func surugaya(jan string) (urls[6] string) {
 
 	 
 
-		// var urls [6]string
+		// var nedan [6]string
 		for i := 1; i < 4; i++ {
 			var s string
 			s = strconv.Itoa(i)
 			kakaku := doc.Find("#search_result > div > div:nth-child(" + s + ") > div.item_price > p:nth-child(1) > span > strong")
-			if len(kakaku.Text()) < 5 {
+			link,exists := doc.Find("#search_result > div.item_box.first_item > div:nth-child(" + s + ") > div.item_detail > p.title > a").Attr("href")
+			if exists != true {
+				nedan[i-1] = ""
 				urls[i-1] = ""
 			} else {
-				urls[i-1] = kakaku.Text()
-				fmt.Println("駿河屋：￥" + urls[i-1][6:])
+			if len(kakaku.Text()) < 5 {
+				nedan[i-1] = ""
+				urls[i-1] = ""
+			} else {
+				nedan[i-1] = kakaku.Text()
+				urls[i-1] = "https://www.suruga-ya.jp/search?category=&search_word=&bottom_detail_search_bookmark=1&gtin=" + jan + "&id_s=&jan10=&mpn=" + link
+				fmt.Println("駿河屋：￥" + nedan[i-1][6:])
+				fmt.Println("駿河屋URL：" + urls[i-1])
 				           
+			}
 			}
 			
 		}
 		for i := 1; i < 4; i++ {
 			var v string
 			v = strconv.Itoa(i)
-			b := doc.Find("#search_result > div:nth-child(2) > div:nth-child(" + v + ") > div.item_price > p:nth-child(1) > span > strong")
-			if len(b.Text()) < 5 {
+			kakaku := doc.Find("#search_result > div:nth-child(2) > div:nth-child(" + v + ") > div.item_price > p:nth-child(1) > span > strong")
+			link,exists := doc.Find("#search_result > div:nth-child(2) > div:nth-child(" + v + ") > div.item_detail > p.title > a").Attr("href")
+			if exists != true {
+				nedan[i+2] = ""
 				urls[i+2] = ""
 			} else {
-				urls[i+2] = b.Text()
-				fmt.Println(urls[i+2][6:])
+			if len(kakaku.Text()) < 5 {
+				nedan[i+2] = ""
+				urls[i+2] = ""
+			} else {
+				nedan[i+2] = kakaku.Text()
+				urls[i+2] = "https://www.suruga-ya.jp/search?category=&search_word=&bottom_detail_search_bookmark=1&gtin=" + jan + "&id_s=&jan10=&mpn=" + link
+				fmt.Println(nedan[i+2][6:])
+				fmt.Println("駿河屋URL：" + urls[i+2])
+			}
 			}
 		}
-		return urls
+		return nedan,urls
 }
 
 
