@@ -13,7 +13,242 @@ import (
 	// "encoding/csv"
 	"log"
 	// "os"
+	"github.com/labstack/echo"
+	"github.com/labstack/echo-contrib/session"
+	"github.com/labstack/echo/middleware"
+	"github.com/srinathgs/mysqlstore"
+	"golang.org/x/crypto/bcrypt"
+
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/jmoiron/sqlx"
 )
+
+type Game struct {
+	ID          int    `json:"id,omitempty"  db:"id"`
+	GameName   	string `json:"gamename,omitempty"  db:"gamename"`
+	Sellday		string `json:"sellday,omitempty"  db:"sellday"`
+	BrandName   string `json:"brandname,omitempty"  db:"brandname"`
+	Median		int	   `json:"median,omitempty"  db:"median"`
+	Stdev	    int    `json:"stdev,omitempty"  db:"stdev"`
+	Count2		int    `json:"count2,omitempty"  db:"count2"`
+	Shoukai		string `json:"shoukai,omitempty"  db:"shoukai"`
+}
+
+var (
+	db *sqlx.DB
+)
+
+func main() {
+	_db, err := sqlx.Connect("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local", os.Getenv("DB_USERNAME"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_HOSTNAME"), os.Getenv("DB_PORT"), os.Getenv("DB_DATABASE")))
+	if err != nil {
+		log.Fatalf("Cannot Connect to Database: %s", err)
+	}
+	db = _db
+
+	store, err := mysqlstore.NewMySQLStoreFromConnection(db.DB, "sessions", "/", 60*60*24*14, []byte("secret-token"))
+	if err != nil {
+		panic(err)
+	}
+
+	e := echo.New()
+	e.Use(middleware.Logger())
+	e.Use(session.Middleware(store))
+
+	e.GET("/ping", func(c echo.Context) error {
+		return c.String(http.StatusOK, "pong")
+	})
+	e.GET("/games/:gameID", getGameInfoHandler)
+	e.POST("/login", postLoginHandler)
+	e.POST("/signup", postSignUpHandler)
+	e.POST("/title", searchTitleHandler)
+
+	withLogin := e.Group("")
+	withLogin.Use(checkLogin)
+	// withLogin.GET("/cities/:cityName", getCityInfoHandler)
+	withLogin.GET("/mypage", getIntentionHandler)
+	withLogin.POST("/rightButton", rightButtonHandler)
+
+	e.Start(":4000")
+}
+
+type LoginRequestBody struct {
+	Username string `json:"username,omitempty" form:"username"`
+	Password string `json:"password,omitempty" form:"password"`
+}
+
+type User struct {
+	ID          int    `json:"id,omitempty"  db:"ID"`
+	Username   string `json:"username,omitempty"  db:"Username"`
+	HashedPass string `json:"-"  db:"HashedPass"`
+}
+
+func postSignUpHandler(c echo.Context) error {
+	req := LoginRequestBody{}
+	c.Bind(&req)
+
+	// もう少し真面目にバリデーションするべき
+	if req.Password == "" || req.Username == "" {
+		// エラーは真面目に返すべき
+		return c.String(http.StatusBadRequest, "項目が空です")
+	}
+
+	hashedPass, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, fmt.Sprintf("bcrypt generate error: %v", err))
+	}
+
+	// ユーザーの存在チェック
+	var count int
+
+	err = db.Get(&count, "SELECT COUNT(*) FROM users WHERE Username=?", req.Username)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, fmt.Sprintf("db error: %v", err))
+	}
+
+	if count > 0 {
+		return c.String(http.StatusConflict, "ユーザーが既に存在しています")
+	}
+
+	_, err = db.Exec("INSERT INTO users (Username, HashedPass) VALUES (?, ?)", req.Username, hashedPass)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, fmt.Sprintf("db error: %v", err))
+	}
+	return c.NoContent(http.StatusCreated)
+}
+
+func postLoginHandler(c echo.Context) error {
+	req := LoginRequestBody{}
+	c.Bind(&req)
+
+	user := User{}
+	err := db.Get(&user, "SELECT * FROM users WHERE username=?", req.Username)
+	if err != nil {
+		return c.String(http.StatusInternalServerError, fmt.Sprintf("db error: %v", err))
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.HashedPass), []byte(req.Password))
+	if err != nil {
+		if err == bcrypt.ErrMismatchedHashAndPassword {
+			return c.NoContent(http.StatusForbidden)
+		} else {
+			return c.NoContent(http.StatusInternalServerError)
+		}
+	}
+
+	sess, err := session.Get("sessions", c)
+	if err != nil {
+		fmt.Println(err)
+		return c.String(http.StatusInternalServerError, "something wrong in getting session")
+	}
+	sess.Values["userName"] = req.Username
+	sess.Save(c.Request(), c.Response())
+
+	return c.NoContent(http.StatusOK)
+}
+
+func checkLogin(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		sess, err := session.Get("sessions", c)
+		if err != nil {
+			fmt.Println(err)
+			return c.String(http.StatusInternalServerError, "something wrong in getting session")
+		}
+
+		if sess.Values["userName"] == nil {
+			return c.String(http.StatusForbidden, "please login")
+		}
+		c.Set("userName", sess.Values["userName"].(string))
+
+		return next(c)
+	}
+}
+
+func getIntentionHandler(c echo.Context) error {
+	sess, err := session.Get("sessions", c)
+		if err != nil {
+			fmt.Println(err)
+			return c.String(http.StatusInternalServerError, "something wrong in getting session")
+		}
+	
+	userName := sess.Values["userName"]
+
+	condition := db.Query("SELECT gamename, median, nowintention FROM gamelist JOIN intention ON id = gameid WHERE username=?", userName)
+	if condition == "" {
+		return c.NoContent(http.StatusNotFound)
+	}
+
+	return c.JSON(http.StatusOK, condition)
+}
+
+func getGameInfoHandler(c echo.Context) error {
+	gameID := c.Param("gameID")
+	rows, err := db.Query("SELECT aws, jan FROM aws_jan WHERE gameid=?", gameID)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var aws string
+		var jan string 
+		if err := rows.Scan(&aws, &jan); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(aws, jan)
+		amazon(aws)
+		surugaya(jan)
+	}
+	game := Game{}
+	db.Get(&game, "SELECT id, gamename, sellday, brandname, median, stdev, count2, shoukai FROM gamelist WHERE id=?", gameID)
+	if game.GameName == "" {
+		return c.NoContent(http.StatusNotFound)
+	}
+
+	return c.JSON(http.StatusOK, game)
+}
+
+func rightButtonHandler(c echo.Context) error {
+	req := gameid
+	sess, err := session.Get("sessions", c)
+		if err != nil {
+			fmt.Println(err)
+			return c.String(http.StatusInternalServerError, "something wrong in getting session")
+		}
+	
+	userName := sess.Values["userName"]
+	nowIntenton := db.QueryRow("SELECT nowintention FROM intention WHERE username=? and gameid=?", userName, gameid)
+	result, err := db.Exec("UPDATE intention SET nowintention = ? WHERE username=? and gameid = ?", nowintention-1,userName, gameid)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return c.JSON(http.StatusOK)
+}
+
+func searchTitleHandler(c echo.Context) error {
+	req := word
+	rows,verr := db.Query("SELECT id, gamename, median FROM gamelist WHERE gamename=?", word)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if kekka == "" {
+		return c.NoContent(http.StatusNotFound)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var id string
+		var gamename string 
+		var median string
+		if err := rows.Scan(&id, &gamename, &median); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(id, gamename, median)
+	}
+	if err := rows.Err(); err != nil {
+		log.Fatal(err)
+	}
+	return c.JSON(http.StatusOK, id, gamename, median)
+}
 
 func amazon(as string)(hontai string,souryo string) {
 	//スクレイピング対象URLを設定
@@ -152,25 +387,4 @@ func surugaya(jan string) (nedan[6] string,urls[6] string) {
 			}
 		}
 		return nedan,urls
-}
-
-
-
-func main () {
-	var asin [4]string
-	asin[0] = "B006LE5LA8"
-	asin[1] = "B01M03YDPX"
-	asin[2] = "B01N5OI9Z1"
-	asin[3] = "B079TNNZ2R"
-
-	var jan [4]string
-	jan[0] = "4571382081018"
-	jan[1] = "4571382081452"
-	jan[2] = "4571382081568"
-	jan[3] = "4571382081773"
-
-	for i := 0; i < len(asin); i++ {
-		amazon(asin[i])
-		surugaya(jan[i])
-	}
 }
