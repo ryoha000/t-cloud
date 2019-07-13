@@ -18,6 +18,7 @@ import (
 	"github.com/labstack/echo/middleware"
 	"github.com/srinathgs/mysqlstore"
 	"golang.org/x/crypto/bcrypt"
+	"database/sql"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
@@ -39,16 +40,11 @@ var (
 )
 
 func main() {
-	_db, err := sqlx.Connect("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local", os.Getenv("DB_USERNAME"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_HOSTNAME"), os.Getenv("DB_PORT"), os.Getenv("DB_DATABASE")))
-	if err != nil {
-		log.Fatalf("Cannot Connect to Database: %s", err)
-	}
-	db = _db
-
-	store, err := mysqlstore.NewMySQLStoreFromConnection(db.DB, "sessions", "/", 60*60*24*14, []byte("secret-token"))
-	if err != nil {
-		panic(err)
-	}
+	db, err := sql.Open("mysql", "root@/mydb1")
+    if err != nil {
+        panic(err.Error())
+    }
+    defer db.Close()
 
 	e := echo.New()
 	e.Use(middleware.Logger())
@@ -198,7 +194,7 @@ func getGameInfoHandler(c echo.Context) error {
 		surugaya(jan)
 	}
 	game := Game{}
-	db.Get(&game, "SELECT id, gamename, sellday, brandname, median, stdev, count2, shoukai FROM gamelist WHERE id=?", gameID)
+	db.Get(&game, "SELECT gameid, gamename, sellday, brandid, median, stdev, count2, shoukai FROM gamelist WHERE gameid=?", gameID)
 	if game.GameName == "" {
 		return c.NoContent(http.StatusNotFound)
 	}
