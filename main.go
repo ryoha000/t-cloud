@@ -16,7 +16,7 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/middleware"
-	// "github.com/srinathgs/mysqlstore"
+	"github.com/srinathgs/mysqlstore"
 	"golang.org/x/crypto/bcrypt"
 	"database/sql"
 
@@ -44,7 +44,11 @@ func main() {
     if err != nil {
         panic(err.Error())
     }
-    defer db.Close()
+	defer db.Close()
+	store, err := mysqlstore.NewMySQLStoreFromConnection(db.DB, "sessions", "/", 60*60*24*14, []byte("secret-token"))
+	if err != nil {
+		panic(err)
+	}
 
 	e := echo.New()
 	e.Use(middleware.Logger())
@@ -63,7 +67,7 @@ func main() {
 	// withLogin.GET("/cities/:cityName", getCityInfoHandler)
 	withLogin.GET("/mypage", getIntentionHandler)
 	withLogin.POST("/rightButton", rightButtonHandler)
-	fmt.Println(ok)
+	fmt.Println("ok")
 	e.Start(":4000")
 }
 
@@ -212,7 +216,7 @@ func getGameInfoHandler(c echo.Context) error {
 
 func rightButtonHandler(c echo.Context) error {
 	req := ButtonRequestBody{}
-	req.GameID := gameid
+	gameid := req.GameID
 	sess, err := session.Get("sessions", c)
 		if err != nil {
 			fmt.Println(err)
@@ -232,7 +236,7 @@ func rightButtonHandler(c echo.Context) error {
 func searchTitleHandler(c echo.Context) error {
 	req := SearchRequestBody{}
 	c.Bind(&req)
-	req.Word := word
+	word := req.Word
 	rows,verr := db.Query("SELECT id, gamename, median FROM gamelist WHERE gamename=?", word)
 	if err != nil {
 		log.Fatal(err)
