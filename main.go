@@ -39,6 +39,7 @@ var (
 
 func main() {
 	db, err := sql.Open("mysql", "root@/mydb1")
+
     if err != nil {
         panic(err.Error())
     }
@@ -64,7 +65,7 @@ func main() {
 	withLogin.Use(checkLogin)
 	// withLogin.GET("/cities/:cityName", getCityInfoHandler)
 	withLogin.GET("/mypage", getIntentionHandler)
-	withLogin.POST("/rightButton", rightButtonHandler)
+	// withLogin.POST("/rightButton", rightButtonHandler)
 	fmt.Println("ok")
 	e.Start(":4000")
 }
@@ -92,6 +93,12 @@ type Joutai struct {
 	GameID int `json:"gameid,omitempty" form:"gameid"`
 	Username   string `json:"username,omitempty"  db:"Username"`
 	NowIntention int	   `json:"nowintention,omitempty"  db:"nowintention"`
+}
+
+type Kekka struct {
+	GameID int `json:"gameid,omitempty" form:"gameid"`
+	GameName   	string `json:"gamename,omitempty"  db:"gamename"`
+	Median		int	   `json:"median,omitempty"  db:"median"`
 }
 
 func postSignUpHandler(c echo.Context) error {
@@ -243,7 +250,7 @@ func searchTitleHandler(c echo.Context) error {
 	req := SearchRequestBody{}
 	c.Bind(&req)
 	word := req.Word
-	rows,verr := db.Query("SELECT id, gamename, median FROM gamelist WHERE gamename=?", word)
+	rows,err := db.Query("SELECT gameid, gamename, median FROM gamelist WHERE gamename=?", word)
 	// if err != nil {
 	// 	log.Fatal(err)
 	// }
@@ -251,20 +258,18 @@ func searchTitleHandler(c echo.Context) error {
 	// 	return c.NoContent(http.StatusNotFound)
 	// }
 	defer rows.Close()
-
+	var kensaku []Kensaku
 	for rows.Next() {
-		var id string
-		var gamename string 
-		var median string
-		if err := rows.Scan(&id, &gamename, &median); err != nil {
+		kekka := Kensaku{}
+		if err := rows.Scan(&gameid, &gamename, &median); err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println(id, gamename, median)
+		kensaku = append(kensaku,kekka)
 	}
 	if err := rows.Err(); err != nil {
 		log.Fatal(err)
 	}
-	return c.JSON(http.StatusOK, id, gamename, median)
+	return c.JSON(http.StatusOK, kensaku)
 }
 
 // func amazon(as string)(hontai string,souryo string) {
