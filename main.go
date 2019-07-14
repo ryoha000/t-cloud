@@ -8,15 +8,12 @@ import (
 	// "golang.org/x/text/encoding/japanese"
 	// "bufio"
 	// "strconv"
-	// "regexp"
 	// "strings"
-	// "encoding/csv"
 	"log"
-	// "os"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/middleware"
-	"github.com/srinathgs/mysqlstore"
+	// "github.com/srinathgs/mysqlstore"
 	"golang.org/x/crypto/bcrypt"
 	"database/sql"
 
@@ -188,9 +185,9 @@ func getIntentionHandler(c echo.Context) error {
 	userName := sess.Values["userName"]
 	condition := Game{}
 	condition = db.Query("SELECT gameid, gamename, median, nowintention FROM gamelist JOIN intention ON id = gameid WHERE username=?", userName)
-	if condition == nil {
-		return c.NoContent(http.StatusNotFound)
-	}
+	// if condition == nil {
+	// 	return c.NoContent(http.StatusNotFound)
+	// }
 
 	return c.JSON(http.StatusOK, condition)
 }
@@ -221,37 +218,38 @@ func getGameInfoHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, game)
 }
 
-func rightButtonHandler(c echo.Context) error {
-	req := ButtonRequestBody{}
-	gameid := req.GameID
-	sess, err := session.Get("sessions", c)
-		if err != nil {
-			fmt.Println(err)
-			return c.String(http.StatusInternalServerError, "something wrong in getting session")
-		}
+// func rightButtonHandler(c echo.Context) error {
+// 	req := ButtonRequestBody{}
+// 	c.Bind(&req)
+// 	gameid := req.GameID
+// 	sess, err := session.Get("sessions", c)
+// 		if err != nil {
+// 			fmt.Println(err)
+// 			return c.String(http.StatusInternalServerError, "something wrong in getting session")
+// 		}
 	
-	userName := sess.Values["userName"]
-	nowIntenton := Joutai{}
-	nowIntenton = db.QueryRow("SELECT nowintention FROM intention WHERE username=? and gameid=?", userName, gameid)
-	result, err := db.Exec("UPDATE intention SET nowintention = ? WHERE username=? and gameid = ?", nowintention-1,userName, gameid)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
+// 	userName := sess.Values["userName"]
+// 	nowIntenton := Joutai{}
+// 	nowIntention = db.QueryRow("SELECT nowintention FROM intention WHERE username=? and gameid=?", userName, gameid)
+// 	result, err := db.Exec("UPDATE intention SET nowintention = ? WHERE username=? and gameid = ?", nowIntention.NowIntention-1,userName, gameid)
+// 	// if err != nil {
+// 	// 	log.Fatal(err)
+// 	// }
 
-	return c.JSON(http.StatusOK)
-}
+// 	return c.NoContent(http.StatusOK)
+// }
 
 func searchTitleHandler(c echo.Context) error {
 	req := SearchRequestBody{}
 	c.Bind(&req)
 	word := req.Word
 	rows,verr := db.Query("SELECT id, gamename, median FROM gamelist WHERE gamename=?", word)
-	if err != nil {
-		log.Fatal(err)
-	}
-	if rows == "" {
-		return c.NoContent(http.StatusNotFound)
-	}
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// if rows == "" {
+	// 	return c.NoContent(http.StatusNotFound)
+	// }
 	defer rows.Close()
 
 	for rows.Next() {
