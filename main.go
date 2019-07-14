@@ -2,14 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/PuerkitoBio/goquery"
+	// "github.com/PuerkitoBio/goquery"
 	"net/http"
-	"golang.org/x/text/transform"
-	"golang.org/x/text/encoding/japanese"
-	"bufio"
-	"strconv"
+	// "golang.org/x/text/transform"
+	// "golang.org/x/text/encoding/japanese"
+	// "bufio"
+	// "strconv"
 	// "regexp"
-	"strings"
+	// "strings"
 	// "encoding/csv"
 	"log"
 	// "os"
@@ -46,14 +46,14 @@ func main() {
         panic(err.Error())
     }
 	defer db.Close()
-	store, err := mysqlstore.NewMySQLStoreFromConnection(db.DB, "sessions", "/", 60*60*24*14, []byte("secret-token"))
-	if err != nil {
-		panic(err)
-	}
+	// store, err := mysqlstore.NewMySQLStoreFromConnection(db.DB, "sessions", "/", 60*60*24*14, []byte("secret-token"))
+	// if err != nil {
+	// 	panic(err)
+	// }
 
 	e := echo.New()
 	e.Use(middleware.Logger())
-	e.Use(session.Middleware(store))
+	// e.Use(session.Middleware(store))
 
 	e.GET("/ping", func(c echo.Context) error {
 		return c.String(http.StatusOK, "pong")
@@ -188,7 +188,7 @@ func getIntentionHandler(c echo.Context) error {
 	userName := sess.Values["userName"]
 	condition := Game{}
 	condition = db.Query("SELECT gameid, gamename, median, nowintention FROM gamelist JOIN intention ON id = gameid WHERE username=?", userName)
-	if condition == "" {
+	if condition == nil {
 		return c.NoContent(http.StatusNotFound)
 	}
 
@@ -209,8 +209,8 @@ func getGameInfoHandler(c echo.Context) error {
 			log.Fatal(err)
 		}
 		fmt.Println(aws, jan)
-		amazon(aws)
-		surugaya(jan)
+		// amazon(aws)
+		// surugaya(jan)
 	}
 	game := Game{}
 	db.Get(&game, "SELECT gameid, gamename, sellday, brandid, median, stdev, count2, shoukai FROM gamelist WHERE gameid=?", gameID)
