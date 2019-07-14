@@ -258,9 +258,9 @@ func searchTitleHandler(c echo.Context) error {
 	// 	return c.NoContent(http.StatusNotFound)
 	// }
 	defer rows.Close()
-	var kensaku []Kensaku
+	kensaku := Kekka{}
 	for rows.Next() {
-		kekka := Kensaku{}
+		kekka := Kekka{}
 		if err := rows.Scan(&gameid, &gamename, &median); err != nil {
 			log.Fatal(err)
 		}
