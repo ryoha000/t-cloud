@@ -16,7 +16,7 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/middleware"
-	"github.com/srinathgs/mysqlstore"
+	// "github.com/srinathgs/mysqlstore"
 	"golang.org/x/crypto/bcrypt"
 	"database/sql"
 
@@ -63,7 +63,7 @@ func main() {
 	// withLogin.GET("/cities/:cityName", getCityInfoHandler)
 	withLogin.GET("/mypage", getIntentionHandler)
 	withLogin.POST("/rightButton", rightButtonHandler)
-
+	fmt.Println(ok)
 	e.Start(":4000")
 }
 
@@ -76,6 +76,14 @@ type User struct {
 	ID          int    `json:"id,omitempty"  db:"ID"`
 	Username   string `json:"username,omitempty"  db:"Username"`
 	HashedPass string `json:"-"  db:"HashedPass"`
+}
+
+type SearchRequestBody struct {
+	Word string `json:"word,omitempty" form:"word"`
+}
+
+type ButtonRequestBody struct {
+	GameID string `json:"gameid,omitempty" form:"gameid"`
 }
 
 func postSignUpHandler(c echo.Context) error {
@@ -203,7 +211,8 @@ func getGameInfoHandler(c echo.Context) error {
 }
 
 func rightButtonHandler(c echo.Context) error {
-	req := gameid
+	req := ButtonRequestBody{}
+	req.GameID := gameid
 	sess, err := session.Get("sessions", c)
 		if err != nil {
 			fmt.Println(err)
@@ -221,7 +230,9 @@ func rightButtonHandler(c echo.Context) error {
 }
 
 func searchTitleHandler(c echo.Context) error {
-	req := word
+	req := SearchRequestBody{}
+	c.Bind(&req)
+	req.Word := word
 	rows,verr := db.Query("SELECT id, gamename, median FROM gamelist WHERE gamename=?", word)
 	if err != nil {
 		log.Fatal(err)
@@ -311,12 +322,6 @@ func sofmap(jan string) {
 			fmt.Printf("")
 		} else {
 			fmt.Println(b[7:])
-		}
-}
-
-func failOnError(err error) {
-		if err != nil {
-			log.Fatal("Error:", err)
 		}
 }
 
