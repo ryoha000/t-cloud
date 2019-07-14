@@ -25,7 +25,7 @@ import (
 )
 
 type Game struct {
-	ID          int    `json:"id,omitempty"  db:"id"`
+	GameID      int    `json:"id,omitempty"  db:"id"`
 	GameName   	string `json:"gamename,omitempty"  db:"gamename"`
 	Sellday		string `json:"sellday,omitempty"  db:"sellday"`
 	BrandName   string `json:"brandname,omitempty"  db:"brandname"`
@@ -33,6 +33,7 @@ type Game struct {
 	Stdev	    int    `json:"stdev,omitempty"  db:"stdev"`
 	Count2		int    `json:"count2,omitempty"  db:"count2"`
 	Shoukai		string `json:"shoukai,omitempty"  db:"shoukai"`
+	NowIntention int	   `json:"nowintention,omitempty"  db:"nowintention"`
 }
 
 var (
@@ -87,7 +88,13 @@ type SearchRequestBody struct {
 }
 
 type ButtonRequestBody struct {
-	GameID string `json:"gameid,omitempty" form:"gameid"`
+	GameID int `json:"gameid,omitempty" form:"gameid"`
+}
+
+type Joutai struct {
+	GameID int `json:"gameid,omitempty" form:"gameid"`
+	Username   string `json:"username,omitempty"  db:"Username"`
+	NowIntention int	   `json:"nowintention,omitempty"  db:"nowintention"`
 }
 
 func postSignUpHandler(c echo.Context) error {
@@ -179,8 +186,8 @@ func getIntentionHandler(c echo.Context) error {
 		}
 	
 	userName := sess.Values["userName"]
-
-	condition := db.Query("SELECT gamename, median, nowintention FROM gamelist JOIN intention ON id = gameid WHERE username=?", userName)
+	condition := Game{}
+	condition = db.Query("SELECT gameid, gamename, median, nowintention FROM gamelist JOIN intention ON id = gameid WHERE username=?", userName)
 	if condition == "" {
 		return c.NoContent(http.StatusNotFound)
 	}
@@ -224,11 +231,12 @@ func rightButtonHandler(c echo.Context) error {
 		}
 	
 	userName := sess.Values["userName"]
-	nowIntenton := db.QueryRow("SELECT nowintention FROM intention WHERE username=? and gameid=?", userName, gameid)
+	nowIntenton := Joutai{}
+	nowIntenton = db.QueryRow("SELECT nowintention FROM intention WHERE username=? and gameid=?", userName, gameid)
 	result, err := db.Exec("UPDATE intention SET nowintention = ? WHERE username=? and gameid = ?", nowintention-1,userName, gameid)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
 	return c.JSON(http.StatusOK)
 }
@@ -241,7 +249,7 @@ func searchTitleHandler(c echo.Context) error {
 	if err != nil {
 		log.Fatal(err)
 	}
-	if kekka == "" {
+	if rows == "" {
 		return c.NoContent(http.StatusNotFound)
 	}
 	defer rows.Close()
@@ -261,135 +269,135 @@ func searchTitleHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, id, gamename, median)
 }
 
-func amazon(as string)(hontai string,souryo string) {
-	//スクレイピング対象URLを設定
-	sc_url := "https://www.amazon.co.jp/gp/offer-listing/" + as + "/ref=dp_olp_used?ie=UTF8&condition=used"
+// func amazon(as string)(hontai string,souryo string) {
+// 	//スクレイピング対象URLを設定
+// 	sc_url := "https://www.amazon.co.jp/gp/offer-listing/" + as + "/ref=dp_olp_used?ie=UTF8&condition=used"
  
-	//goquery、ページを取得
-	res, err := http.Get(sc_url)
-	if err != nil {
-    	// handle error
-	}
-	defer res.Body.Close()
+// 	//goquery、ページを取得
+// 	res, err := http.Get(sc_url)
+// 	if err != nil {
+//     	// handle error
+// 	}
+// 	defer res.Body.Close()
  
-	utfBody := transform.NewReader(bufio.NewReader(res.Body), japanese.ShiftJIS.NewDecoder())
+// 	utfBody := transform.NewReader(bufio.NewReader(res.Body), japanese.ShiftJIS.NewDecoder())
  
-	doc, err := goquery.NewDocumentFromReader(utfBody)
+// 	doc, err := goquery.NewDocumentFromReader(utfBody)
  
-	hontai = doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn > span").Text()
-	souryo = doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn > p > span > span.olpShippingPrice").Text()
-	if len(hontai) < 1 {
-		fmt.Printf("中古なし")
-	} else {
-		fmt.Println("Amazon：￥" + hontai[23:])
-		if len(souryo) < 6 {
-			fmt.Printf("送料無料")
-		} else {
-			fmt.Println("送料：￥" + souryo[7:])
-		}
-		fmt.Printf("AmazonURL:" + sc_url)
-	}
+// 	hontai = doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn > span").Text()
+// 	souryo = doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn > p > span > span.olpShippingPrice").Text()
+// 	if len(hontai) < 1 {
+// 		fmt.Printf("中古なし")
+// 	} else {
+// 		fmt.Println("Amazon：￥" + hontai[23:])
+// 		if len(souryo) < 6 {
+// 			fmt.Printf("送料無料")
+// 		} else {
+// 			fmt.Println("送料：￥" + souryo[7:])
+// 		}
+// 		fmt.Printf("AmazonURL:" + sc_url)
+// 	}
 	
-	return hontai,souryo
-}
+// 	return hontai,souryo
+// }
 
-func sofmap(jan string) {
-		//スクレイピング対象URLを設定
-		sc_url := "https://a.sofmap.com/search_result.aspx?mode=SEARCH&gid=&gid=&gid=&keyword_and=&keyword_or=&keyword_not=&product_maker=&product_name=&product_code=&jan_code=" + jan + "&product_type=NEW&product_type=USED&price_from=&price_to=&sale_date_from_year=&sale_date_from_month=&sale_date_from_day=&sale_date_to_year=&sale_date_to_month=&sale_date_to_day=&reserve_date_from_year=&reserve_date_from_month=&reserve_date_from_day=&reserve_date_to_year=&reserve_date_to_month=&reserve_date_to_day=&order_by=DEFAULT&styp=p_kwsk"
+// func sofmap(jan string) {
+// 		//スクレイピング対象URLを設定
+// 		sc_url := "https://a.sofmap.com/search_result.aspx?mode=SEARCH&gid=&gid=&gid=&keyword_and=&keyword_or=&keyword_not=&product_maker=&product_name=&product_code=&jan_code=" + jan + "&product_type=NEW&product_type=USED&price_from=&price_to=&sale_date_from_year=&sale_date_from_month=&sale_date_from_day=&sale_date_to_year=&sale_date_to_month=&sale_date_to_day=&reserve_date_from_year=&reserve_date_from_month=&reserve_date_from_day=&reserve_date_to_year=&reserve_date_to_month=&reserve_date_to_day=&order_by=DEFAULT&styp=p_kwsk"
 	 
-		//goquery、ページを取得
-		res, err := http.Get(sc_url)
-		if err != nil {
-			// handle error
-		}
-		defer res.Body.Close()
+// 		//goquery、ページを取得
+// 		res, err := http.Get(sc_url)
+// 		if err != nil {
+// 			// handle error
+// 		}
+// 		defer res.Body.Close()
 	 
-		utfBody := transform.NewReader(bufio.NewReader(res.Body), japanese.ShiftJIS.NewDecoder())
+// 		utfBody := transform.NewReader(bufio.NewReader(res.Body), japanese.ShiftJIS.NewDecoder())
 	 
-		doc, err := goquery.NewDocumentFromReader(utfBody)
-		if err != nil{
-		  panic(err)
-		}
+// 		doc, err := goquery.NewDocumentFromReader(utfBody)
+// 		if err != nil{
+// 		  panic(err)
+// 		}
 	 
-		// 掲載イベントURL一覧を取得
-		// doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn").Each(func(i int, s *goquery.Selection) {
-		// 	// ブログのタイトルとタグを取得
-		// 	title := s.Find("span").Text()
+// 		// 掲載イベントURL一覧を取得
+// 		// doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn").Each(func(i int, s *goquery.Selection) {
+// 		// 	// ブログのタイトルとタグを取得
+// 		// 	title := s.Find("span").Text()
 		
-		// 	fmt.Printf(title)
-		//   })
-		a := doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn > span.a-size-large.a-color-price.olpOfferPrice.a-text-bold").Text()
-		b := doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn > p > span > span.olpShippingPrice").Text()
-		fmt.Println(a[23:])
-		c := strings.Index(b, "5")
-		if c == -1 {
-			fmt.Printf("")
-		} else {
-			fmt.Println(b[7:])
-		}
-}
+// 		// 	fmt.Printf(title)
+// 		//   })
+// 		a := doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn > span.a-size-large.a-color-price.olpOfferPrice.a-text-bold").Text()
+// 		b := doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn > p > span > span.olpShippingPrice").Text()
+// 		fmt.Println(a[23:])
+// 		c := strings.Index(b, "5")
+// 		if c == -1 {
+// 			fmt.Printf("")
+// 		} else {
+// 			fmt.Println(b[7:])
+// 		}
+// }
 
-func surugaya(jan string) (nedan[6] string,urls[6] string) {
-		//スクレイピング対象URLを設定
-		url := "https://www.suruga-ya.jp/search?category=&search_word=&bottom_detail_search_bookmark=1&gtin=" + jan + "&id_s=&jan10=&mpn="
+// func surugaya(jan string) (nedan[6] string,urls[6] string) {
+// 		//スクレイピング対象URLを設定
+// 		url := "https://www.suruga-ya.jp/search?category=&search_word=&bottom_detail_search_bookmark=1&gtin=" + jan + "&id_s=&jan10=&mpn="
 	 
-		//goquery、ページを取得
-		res, err := http.Get(url)
-		if err != nil {
-		}
-		defer res.Body.Close()
+// 		//goquery、ページを取得
+// 		res, err := http.Get(url)
+// 		if err != nil {
+// 		}
+// 		defer res.Body.Close()
 	 
-		utfBody := transform.NewReader(bufio.NewReader(res.Body), japanese.ShiftJIS.NewDecoder())
+// 		utfBody := transform.NewReader(bufio.NewReader(res.Body), japanese.ShiftJIS.NewDecoder())
 	 
-		doc, err := goquery.NewDocumentFromReader(utfBody)
-		if err != nil{
-			panic(err)
-		}
+// 		doc, err := goquery.NewDocumentFromReader(utfBody)
+// 		if err != nil{
+// 			panic(err)
+// 		}
 
 	 
 
-		// var nedan [6]string
-		for i := 1; i < 4; i++ {
-			var s string
-			s = strconv.Itoa(i)
-			kakaku := doc.Find("#search_result > div > div:nth-child(" + s + ") > div.item_price > p:nth-child(1) > span > strong")
-			link,exists := doc.Find("#search_result > div.item_box.first_item > div:nth-child(" + s + ") > div.item_detail > p.title > a").Attr("href")
-			if exists != true {
-				nedan[i-1] = ""
-				urls[i-1] = ""
-			} else {
-			if len(kakaku.Text()) < 5 {
-				nedan[i-1] = ""
-				urls[i-1] = ""
-			} else {
-				nedan[i-1] = kakaku.Text()
-				urls[i-1] = "https://www.suruga-ya.jp/search?category=&search_word=&bottom_detail_search_bookmark=1&gtin=" + jan + "&id_s=&jan10=&mpn=" + link
-				fmt.Println("駿河屋：￥" + nedan[i-1][6:])
-				fmt.Println("駿河屋URL：" + urls[i-1])
+// 		// var nedan [6]string
+// 		for i := 1; i < 4; i++ {
+// 			var s string
+// 			s = strconv.Itoa(i)
+// 			kakaku := doc.Find("#search_result > div > div:nth-child(" + s + ") > div.item_price > p:nth-child(1) > span > strong")
+// 			link,exists := doc.Find("#search_result > div.item_box.first_item > div:nth-child(" + s + ") > div.item_detail > p.title > a").Attr("href")
+// 			if exists != true {
+// 				nedan[i-1] = ""
+// 				urls[i-1] = ""
+// 			} else {
+// 			if len(kakaku.Text()) < 5 {
+// 				nedan[i-1] = ""
+// 				urls[i-1] = ""
+// 			} else {
+// 				nedan[i-1] = kakaku.Text()
+// 				urls[i-1] = "https://www.suruga-ya.jp/search?category=&search_word=&bottom_detail_search_bookmark=1&gtin=" + jan + "&id_s=&jan10=&mpn=" + link
+// 				fmt.Println("駿河屋：￥" + nedan[i-1][6:])
+// 				fmt.Println("駿河屋URL：" + urls[i-1])
 				           
-			}
-			}
+// 			}
+// 			}
 			
-		}
-		for i := 1; i < 4; i++ {
-			var v string
-			v = strconv.Itoa(i)
-			kakaku := doc.Find("#search_result > div:nth-child(2) > div:nth-child(" + v + ") > div.item_price > p:nth-child(1) > span > strong")
-			link,exists := doc.Find("#search_result > div:nth-child(2) > div:nth-child(" + v + ") > div.item_detail > p.title > a").Attr("href")
-			if exists != true {
-				nedan[i+2] = ""
-				urls[i+2] = ""
-			} else {
-			if len(kakaku.Text()) < 5 {
-				nedan[i+2] = ""
-				urls[i+2] = ""
-			} else {
-				nedan[i+2] = kakaku.Text()
-				urls[i+2] = "https://www.suruga-ya.jp/search?category=&search_word=&bottom_detail_search_bookmark=1&gtin=" + jan + "&id_s=&jan10=&mpn=" + link
-				fmt.Println(nedan[i+2][6:])
-				fmt.Println("駿河屋URL：" + urls[i+2])
-			}
-			}
-		}
-		return nedan,urls
-}
+// 		}
+// 		for i := 1; i < 4; i++ {
+// 			var v string
+// 			v = strconv.Itoa(i)
+// 			kakaku := doc.Find("#search_result > div:nth-child(2) > div:nth-child(" + v + ") > div.item_price > p:nth-child(1) > span > strong")
+// 			link,exists := doc.Find("#search_result > div:nth-child(2) > div:nth-child(" + v + ") > div.item_detail > p.title > a").Attr("href")
+// 			if exists != true {
+// 				nedan[i+2] = ""
+// 				urls[i+2] = ""
+// 			} else {
+// 			if len(kakaku.Text()) < 5 {
+// 				nedan[i+2] = ""
+// 				urls[i+2] = ""
+// 			} else {
+// 				nedan[i+2] = kakaku.Text()
+// 				urls[i+2] = "https://www.suruga-ya.jp/search?category=&search_word=&bottom_detail_search_bookmark=1&gtin=" + jan + "&id_s=&jan10=&mpn=" + link
+// 				fmt.Println(nedan[i+2][6:])
+// 				fmt.Println("駿河屋URL：" + urls[i+2])
+// 			}
+// 			}
+// 		}
+// 		return nedan,urls
+// }
