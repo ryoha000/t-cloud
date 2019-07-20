@@ -198,7 +198,7 @@ func getIntentionHandler(c echo.Context) error {
 	
 	userName := sess.Values["userName"]
 	conditions := []GameIntention{}
-	rows,err = db.Query("SELECT gameid, gamename, median, nowintention FROM gamelist JOIN intention ON id = gameid WHERE username=?", userName)
+	rows,err := db.Query("SELECT gameid, gamename, median, nowintention FROM gamelist JOIN intention ON id = gameid WHERE username=?", userName)
 	defer rows.Close()
 	for rows.Next() {
 		condition := GameIntention{}
