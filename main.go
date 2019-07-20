@@ -190,7 +190,7 @@ func getIntentionHandler(c echo.Context) error {
 		}
 	
 	userName := sess.Values["userName"]
-	condition := Game{}
+	condition := []Game{}
 	condition = db.Query("SELECT gameid, gamename, median, nowintention FROM gamelist JOIN intention ON id = gameid WHERE username=?", userName)
 	// if condition == nil {
 	// 	return c.NoContent(http.StatusNotFound)
