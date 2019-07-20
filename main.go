@@ -198,7 +198,7 @@ func getIntentionHandler(c echo.Context) error {
 		}
 	
 	userName := sess.Values["userName"]
-	conditions := []GameIntention{}
+	conditions := []*GameIntention{}
 	rows,err := db.Query("SELECT gameid, gamename, median, nowintention FROM gamelist JOIN intention ON id = gameid WHERE username=?", userName)
 	defer rows.Close()
 	for rows.Next() {
@@ -283,7 +283,7 @@ func searchTitleHandler(c echo.Context) error {
 	// 	return c.NoContent(http.StatusNotFound)
 	// }
 	defer rows.Close()
-	kensaku := []
+	kensaku := []*Kekka{}
 	for rows.Next() {
 		kekka := Kekka{}
 		var gameid int
@@ -298,7 +298,7 @@ func searchTitleHandler(c echo.Context) error {
 		log.Fatal(err)
 	}
 	// return c.JSON(http.StatusOK, kensaku)
-	fmt.Fprint(w, kensaku)
+	fmt.Fprint(w, Kekka(kensaku))
 	return
 }
 
