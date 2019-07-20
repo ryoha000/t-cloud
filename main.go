@@ -33,6 +33,13 @@ type Game struct {
 	NowIntention int	   `json:"nowintention,omitempty"  db:"nowintention"`
 }
 
+type GameIntention struct {
+	GameID      int    `json:"id,omitempty"  db:"id"`
+	GameName   	string `json:"gamename,omitempty"  db:"gamename"`
+	Median		int	   `json:"median,omitempty"  db:"median"`
+	NowIntention int	   `json:"nowintention,omitempty"  db:"nowintention"`
+}
+
 var (
 	db *sqlx.DB
 )
@@ -190,13 +197,24 @@ func getIntentionHandler(c echo.Context) error {
 		}
 	
 	userName := sess.Values["userName"]
-	condition := []Game{}
-	condition = db.Query("SELECT gameid, gamename, median, nowintention FROM gamelist JOIN intention ON id = gameid WHERE username=?", userName)
+	conditions := []GameIntention{}
+	rows.err = db.Query("SELECT gameid, gamename, median, nowintention FROM gamelist JOIN intention ON id = gameid WHERE username=?", userName)
+	defer rows.Close()
+	for rows.Next() {
+		condition := GameIntention{}
+		if err := rows.Scan(&gameid, &gamename, &median); err != nil {
+			log.Fatal(err)
+		}
+		conditions = append(conditions,condition)
+	}
+	if err := rows.Err(); err != nil {
+		log.Fatal(err)
+	}
 	// if condition == nil {
 	// 	return c.NoContent(http.StatusNotFound)
 	// }
 
-	return c.JSON(http.StatusOK, condition)
+	return c.JSON(http.StatusOK, conditions)
 }
 
 func getGameInfoHandler(c echo.Context) error {
@@ -246,31 +264,31 @@ func getGameInfoHandler(c echo.Context) error {
 // 	return c.NoContent(http.StatusOK)
 // }
 
-// func searchTitleHandler(c echo.Context) error {
-// 	req := SearchRequestBody{}
-// 	c.Bind(&req)
-// 	word := req.Word
-// 	rows,err := db.Query("SELECT gameid, gamename, median FROM gamelist WHERE gamename=?", word)
-// 	// if err != nil {
-// 	// 	log.Fatal(err)
-// 	// }
-// 	// if rows == "" {
-// 	// 	return c.NoContent(http.StatusNotFound)
-// 	// }
-// 	defer rows.Close()
-// 	kensaku := Kekka{}
-// 	for rows.Next() {
-// 		kekka := Kekka{}
-// 		if err := rows.Scan(&gameid, &gamename, &median); err != nil {
-// 			log.Fatal(err)
-// 		}
-// 		kensaku = append(kensaku,kekka)
-// 	}
-// 	if err := rows.Err(); err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	return c.JSON(http.StatusOK, kensaku)
-// }
+func searchTitleHandler(c echo.Context) error {
+	req := SearchRequestBody{}
+	c.Bind(&req)
+	word := req.Word
+	rows,err := db.Query("SELECT gameid, gamename, median FROM gamelist WHERE gamename=?", word)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// if rows == "" {
+	// 	return c.NoContent(http.StatusNotFound)
+	// }
+	defer rows.Close()
+	kensaku := []Kekka{}
+	for rows.Next() {
+		kekka := Kekka{}
+		if err := rows.Scan(&gameid, &gamename, &median); err != nil {
+			log.Fatal(err)
+		}
+		kensaku = append(kensaku,kekka)
+	}
+	if err := rows.Err(); err != nil {
+		log.Fatal(err)
+	}
+	return c.JSON(http.StatusOK, kensaku)
+}
 
 // func amazon(as string)(hontai string,souryo string) {
 // 	//スクレイピング対象URLを設定
