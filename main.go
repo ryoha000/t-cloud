@@ -59,7 +59,7 @@ func main() {
 	e.GET("/games/:gameID", getGameInfoHandler)
 	e.POST("/login", postLoginHandler)
 	e.POST("/signup", postSignUpHandler)
-	e.POST("/title", searchTitleHandler)
+	// e.POST("/title", searchTitleHandler)
 
 	withLogin := e.Group("")
 	withLogin.Use(checkLogin)
