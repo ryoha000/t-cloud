@@ -246,31 +246,31 @@ func getGameInfoHandler(c echo.Context) error {
 // 	return c.NoContent(http.StatusOK)
 // }
 
-func searchTitleHandler(c echo.Context) error {
-	req := SearchRequestBody{}
-	c.Bind(&req)
-	word := req.Word
-	rows,err := db.Query("SELECT gameid, gamename, median FROM gamelist WHERE gamename=?", word)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// if rows == "" {
-	// 	return c.NoContent(http.StatusNotFound)
-	// }
-	defer rows.Close()
-	kensaku := Kekka{}
-	for rows.Next() {
-		kekka := Kekka{}
-		if err := rows.Scan(&gameid, &gamename, &median); err != nil {
-			log.Fatal(err)
-		}
-		kensaku = append(kensaku,kekka)
-	}
-	if err := rows.Err(); err != nil {
-		log.Fatal(err)
-	}
-	return c.JSON(http.StatusOK, kensaku)
-}
+// func searchTitleHandler(c echo.Context) error {
+// 	req := SearchRequestBody{}
+// 	c.Bind(&req)
+// 	word := req.Word
+// 	rows,err := db.Query("SELECT gameid, gamename, median FROM gamelist WHERE gamename=?", word)
+// 	// if err != nil {
+// 	// 	log.Fatal(err)
+// 	// }
+// 	// if rows == "" {
+// 	// 	return c.NoContent(http.StatusNotFound)
+// 	// }
+// 	defer rows.Close()
+// 	kensaku := Kekka{}
+// 	for rows.Next() {
+// 		kekka := Kekka{}
+// 		if err := rows.Scan(&gameid, &gamename, &median); err != nil {
+// 			log.Fatal(err)
+// 		}
+// 		kensaku = append(kensaku,kekka)
+// 	}
+// 	if err := rows.Err(); err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	return c.JSON(http.StatusOK, kensaku)
+// }
 
 // func amazon(as string)(hontai string,souryo string) {
 // 	//スクレイピング対象URLを設定
