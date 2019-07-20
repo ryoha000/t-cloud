@@ -202,7 +202,11 @@ func getIntentionHandler(c echo.Context) error {
 	defer rows.Close()
 	for rows.Next() {
 		condition := GameIntention{}
-		if err := rows.Scan(&gameid, &gamename, &median); err != nil {
+		var gameid int
+		var gamename string
+		var median int
+		var NowIntention int
+		if err := rows.Scan(&gameid, &gamename, &median,&NowIntention); err != nil {
 			log.Fatal(err)
 		}
 		conditions = append(conditions,condition)
@@ -215,7 +219,8 @@ func getIntentionHandler(c echo.Context) error {
 	// }
 
 	// return c.JSON(http.StatusOK, conditions)
-	fmt.Fprint(w, string(conditions))
+	fmt.Fprint(w, GameIntention(conditions))
+	return
 }
 
 func getGameInfoHandler(c echo.Context) error {
@@ -241,7 +246,7 @@ func getGameInfoHandler(c echo.Context) error {
 		return c.NoContent(http.StatusNotFound)
 	}
 
-	return c.JSON(http.StatusOK, game)
+	return c.JSON(http.StatusOK, Game(game))
 }
 
 // func rightButtonHandler(c echo.Context) error {
@@ -280,6 +285,9 @@ func searchTitleHandler(c echo.Context) error {
 	kensaku := []Kekka{}
 	for rows.Next() {
 		kekka := Kekka{}
+		var gameid int
+		var gamename string
+		var median int
 		if err := rows.Scan(&gameid, &gamename, &median); err != nil {
 			log.Fatal(err)
 		}
