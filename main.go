@@ -282,7 +282,7 @@ func searchTitleHandler(c echo.Context) error {
 	// 	return c.NoContent(http.StatusNotFound)
 	// }
 	defer rows.Close()
-	kensaku := []Kekka{}
+	kensaku := []
 	for rows.Next() {
 		kekka := Kekka{}
 		var gameid int
@@ -297,7 +297,8 @@ func searchTitleHandler(c echo.Context) error {
 		log.Fatal(err)
 	}
 	// return c.JSON(http.StatusOK, kensaku)
-	fmt.Fprint(w, string(kensaku))
+	fmt.Fprint(w, kensaku)
+	return
 }
 
 // func amazon(as string)(hontai string,souryo string) {
