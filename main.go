@@ -26,16 +26,16 @@ type Game struct {
 	GameID      int    `json:"gameid,omitempty"  db:"gameid"`
 	GameName   	string `json:"gamename,omitempty"  db:"gamename"`
 	Sellday		string `json:"sellday,omitempty"  db:"sellday"`
-	BrandName   string `json:"brandname,omitempty"  db:"brandname"`
+	BrandID   string `json:"brandid,omitempty"  db:"brandid"`
 	Median		int	   `json:"median,omitempty"  db:"median"`
 	Stdev	    int    `json:"stdev,omitempty"  db:"stdev"`
 	Count2		int    `json:"count2,omitempty"  db:"count2"`
 	Shoukai		string `json:"shoukai,omitempty"  db:"shoukai"`
-	NowIntention int	   `json:"nowintention,omitempty"  db:"nowintention"`
+	// NowIntention int	   `json:"nowintention,omitempty"  db:"nowintention"`
 }
 
 type GameIntention struct {
-	GameID      int    `json:"id,omitempty"  db:"id"`
+	GameID      int    `json:"id,omitempty"  db:"gameid"`
 	GameName   	string `json:"gamename,omitempty"  db:"gamename"`
 	Median		int	   `json:"median,omitempty"  db:"median"`
 	NowIntention int	   `json:"nowintention,omitempty"  db:"nowintention"`
