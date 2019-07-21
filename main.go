@@ -19,7 +19,6 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
-	"encoding/json"
 )
 
 type Game struct {
