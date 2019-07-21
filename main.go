@@ -35,10 +35,16 @@ type Game struct {
 }
 
 type GameIntention struct {
-	GameID      int    `json:"id,omitempty"  db:"gameid"`
+	GameID      int    `json:"gameid,omitempty"  db:"gameid"`
 	GameName   	string `json:"gamename,omitempty"  db:"gamename"`
 	Median		int	   `json:"median,omitempty"  db:"median"`
 	NowIntention int	   `json:"nowintention,omitempty"  db:"nowintention"`
+}
+
+type AwsJan struct {
+	GameID		int		`json:"gameid,omitempty"  db:"gameid"`
+	Aws			string	`json:"aws,omitempty"  db:"aws"`
+	Jan			string	`json:"jan,omitempty"  db:"jan"`
 }
 
 var (
@@ -265,28 +271,10 @@ func getIntentionHandler(c echo.Context) error {
 }
 
 func getGameInfoHandler(c echo.Context) error {
-	db, err := sqlx.Open("mysql", "root@/mydb1")
 
-    if err != nil {
-        panic(err.Error())
-    }
-	defer db.Close()
 	gameID := c.Param("gameID")
-	rows, err := db.Query("SELECT aws, jan FROM aws_jan WHERE gameid=?", gameID)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var aws string
-		var jan string 
-		if err := rows.Scan(&aws, &jan); err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println(aws, jan)
-		// amazon(aws)
-		// surugaya(jan)
-	}
+	AJ := []AwsJan{}
+	db.Select(&AJ,"SELECT aws, jan FROM aws_jan WHERE gameid=?", gameID)
 	game := Game{}
 	db.Get(&game, "SELECT gameid, gamename, sellday, brandid, median, stdev, count2, shoukai FROM gamelist WHERE gameid=?", gameID)
 	if game.GameName == "" {
