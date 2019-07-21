@@ -198,30 +198,30 @@ func getIntentionHandler(c echo.Context) error {
 		}
 	
 	userName := sess.Values["userName"]
-	conditions := []*GameIntention{}
-	rows,err := db.Query("SELECT gameid, gamename, median, nowintention FROM gamelist JOIN intention ON id = gameid WHERE username=?", userName)
-	defer rows.Close()
-	for rows.Next() {
-		condition := GameIntention{}
-		var gameid int
-		var gamename string
-		var median int
-		var NowIntention int
-		if err := rows.Scan(&gameid, &gamename, &median,&NowIntention); err != nil {
-			log.Fatal(err)
-		}
-		conditions = append(conditions,condition)
-	}
-	if err := rows.Err(); err != nil {
-		log.Fatal(err)
-	}
-	// if condition == nil {
-	// 	return c.NoContent(http.StatusNotFound)
+	conditions := []*ameIntention{}
+	db.Query(&conditions,"SELECT gameid, gamename, median, nowintention FROM gamelist JOIN intention ON id = gameid WHERE username=?", userName)
+	// defer rows.Close()
+	// for rows.Next() {
+	// 	condition := GameIntention{}
+	// 	var gameid int
+	// 	var gamename string
+	// 	var median int
+	// 	var NowIntention int
+	// 	if err := rows.Scan(&gameid, &gamename, &median,&NowIntention); err != nil {
+	// 		log.Fatal(err)
+	// 	}
+	// 	conditions = append(conditions,condition)
 	// }
+	// if err := rows.Err(); err != nil {
+	// 	log.Fatal(err)
+	// }
+	// // if condition == nil {
+	// // 	return c.NoContent(http.StatusNotFound)
+	// // }
 
-	// return c.JSON(http.StatusOK, conditions)
-	fmt.Fprint(w, GameIntention(conditions))
-	return
+	// // return c.JSON(http.StatusOK, conditions)
+	// fmt.Fprint(w, GameIntention(conditions))
+	// return
 }
 
 func getGameInfoHandler(c echo.Context) error {
@@ -276,7 +276,7 @@ func searchTitleHandler(c echo.Context) error {
 	c.Bind(&req)
 	word := req.Word
 	kensaku := []Kekka{}
-	Db.SELECT(&kensaku,"SELECT gameid, gamename, median FROM gamelist WHERE gamename=?", word)
+	db.SELECT(&kensaku,"SELECT gameid, gamename, median FROM gamelist WHERE gamename=?", word)
 	// if err != nil {
 	// 	log.Fatal(err)
 	// }
