@@ -282,7 +282,7 @@ func getGameInfoHandler(c echo.Context) error {
 
 	gameID := c.Param("gameID")
 	AJ := []AwsJan{}
-	db.Select(&AJ,"SELECT aws, jan FROM aws_jan WHERE gameid=?", gameID)
+	db.Select(&AJ,"SELECT aws, jan FROM a_j WHERE gameid=?", gameID)
 	game := Game{}
 	db.Get(&game, "SELECT gameid, gamename, sellday, brandid, median, stdev, count2, shoukai FROM gamelist WHERE gameid=?", gameID)
 	// if game.GameName == "" {
