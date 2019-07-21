@@ -84,12 +84,12 @@ func main() {
 	withLogin.GET("/mypage", getIntentionHandler)
 	withLogin.GET("/whoami", getWhoAmIHandler)
 	// withLogin.POST("/rightButton", rightButtonHandler)
-	game := Game{}
-	if err = db.Get(&game, "SELECT gameid, gamename, sellday, brandid, median, stdev, count2, shoukai FROM gamelist WHERE gameid=27000"); err !=nil {
-		// log.Printf("failed get by error '%#v'", err)
-		return
-	}
-	fmt.Println(game)
+	// game := Game{}
+	// if err = db.Get(&game, "SELECT gameid, gamename, sellday, brandid, median, stdev, count2, shoukai FROM gamelist WHERE gameid=27000"); err !=nil {
+	// 	log.Printf("failed get by error '%#v'", err)
+	// 	return
+	// }
+	// fmt.Println(game)
 	
 	e.Start(":4000")
 }
