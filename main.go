@@ -23,7 +23,7 @@ import (
 )
 
 type Game struct {
-	GameID      int    `json:"id,omitempty"  db:"id"`
+	GameID      int    `json:"gameid,omitempty"  db:"gameid"`
 	GameName   	string `json:"gamename,omitempty"  db:"gamename"`
 	Sellday		string `json:"sellday,omitempty"  db:"sellday"`
 	BrandName   string `json:"brandname,omitempty"  db:"brandname"`
