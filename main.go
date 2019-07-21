@@ -73,7 +73,9 @@ func main() {
 	// withLogin.GET("/cities/:cityName", getCityInfoHandler)
 	withLogin.GET("/mypage", getIntentionHandler)
 	// withLogin.POST("/rightButton", rightButtonHandler)
-	fmt.Println("ok")
+	game := Game{}
+	db.Get(&game, "SELECT gameid, gamename, sellday, brandid, median, stdev, count2, shoukai FROM gamelist WHERE gameid=20050")
+	fmt.Println(game)
 	e.Start(":4000")
 }
 
@@ -246,7 +248,7 @@ func getGameInfoHandler(c echo.Context) error {
 		return c.NoContent(http.StatusNotFound)
 	}
 
-	return c.JSON(http.StatusOK, Game(game))
+	return c.JSON(http.StatusOK, game)
 }
 
 // func rightButtonHandler(c echo.Context) error {
