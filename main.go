@@ -297,7 +297,7 @@ func searchTitleHandler(c echo.Context) error {
 	// }
 	// if err := rows.Err(); err != nil {
 	// 	log.Fatal(err)
-	}
+	// }
 	return c.JSON(http.StatusOK, kensaku)
 }
 
