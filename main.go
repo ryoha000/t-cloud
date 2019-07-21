@@ -51,10 +51,6 @@ func main() {
         panic(err.Error())
     }
 	defer db.Close()
-	if err = db.Ping(); err != nil {
-        log.Printf("failed to ping by error '%#v'", err)
-        return
-    }
 	// store, err := mysqlstore.NewMySQLStoreFromConnection(db.DB, "sessions", "/", 60*60*24*14, []byte("secret-token"))
 	// if err != nil {
 	// 	panic(err)
