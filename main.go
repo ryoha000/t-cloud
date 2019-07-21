@@ -289,7 +289,7 @@ func getGameInfoHandler(c echo.Context) error {
 	// 	return c.NoContent(http.StatusNotFound)
 	// }
 
-	return c.JSON(http.StatusOK, game.GameName)
+	return c.JSON(http.StatusOK, game)
 }
 
 // func rightButtonHandler(c echo.Context) error {
