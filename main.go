@@ -13,9 +13,9 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/middleware"
-	"github.com/srinathgs/mysqlstore"
+	// "github.com/srinathgs/mysqlstore"
 	"golang.org/x/crypto/bcrypt"
-	"database/sql"
+	// "database/sql"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
@@ -45,16 +45,16 @@ var (
 )
 
 func main() {
-	db, err := sql.Open("mysql", "root@/mydb1")
+	db, err := sqlx.Open("mysql", "root@/mydb1")
 
     if err != nil {
         panic(err.Error())
     }
 	defer db.Close()
-	store, err := mysqlstore.NewMySQLStoreFromConnection(db.DB, "sessions", "/", 60*60*24*14, []byte("secret-token"))
-	if err != nil {
-		panic(err)
-	}
+	// store, err := mysqlstore.NewMySQLStoreFromConnection(db.DB, "sessions", "/", 60*60*24*14, []byte("secret-token"))
+	// if err != nil {
+	// 	panic(err)
+	// }
 
 	e := echo.New()
 	e.Use(middleware.Logger())
@@ -111,6 +111,12 @@ type Kekka struct {
 }
 
 func postSignUpHandler(c echo.Context) error {
+	db, err := sqlx.Open("mysql", "root@/mydb1")
+
+    if err != nil {
+        panic(err.Error())
+    }
+	defer db.Close()
 	req := LoginRequestBody{}
 	c.Bind(&req)
 
@@ -145,11 +151,13 @@ func postSignUpHandler(c echo.Context) error {
 }
 
 func postLoginHandler(c echo.Context) error {
+	db,err := sqlx.Open("mysql", "root@/mydb1")
+	defer db.Close()
 	req := LoginRequestBody{}
 	c.Bind(&req)
 
 	user := User{}
-	err := db.Get(&user, "SELECT * FROM users WHERE username=?", req.Username)
+	err = db.Get(&user, "SELECT * FROM users WHERE username=?", req.Username)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, fmt.Sprintf("db error: %v", err))
 	}
@@ -192,6 +200,12 @@ func checkLogin(next echo.HandlerFunc) echo.HandlerFunc {
 }
 
 func getIntentionHandler(c echo.Context) error {
+	db, err := sqlx.Open("mysql", "root@/mydb1")
+
+    if err != nil {
+        panic(err.Error())
+    }
+	defer db.Close()
 	sess, err := session.Get("sessions", c)
 		if err != nil {
 			fmt.Println(err)
@@ -226,6 +240,12 @@ func getIntentionHandler(c echo.Context) error {
 }
 
 func getGameInfoHandler(c echo.Context) error {
+	db, err := sqlx.Open("mysql", "root@/mydb1")
+
+    if err != nil {
+        panic(err.Error())
+    }
+	defer db.Close()
 	gameID := c.Param("gameID")
 	rows, err := db.Query("SELECT aws, jan FROM aws_jan WHERE gameid=?", gameID)
 	if err != nil {
@@ -273,6 +293,12 @@ func getGameInfoHandler(c echo.Context) error {
 // }
 
 func searchTitleHandler(c echo.Context) error {
+	db, err := sqlx.Open("mysql", "root@/mydb1")
+
+    if err != nil {
+        panic(err.Error())
+    }
+	defer db.Close()
 	req := SearchRequestBody{}
 	c.Bind(&req)
 	word := req.Word
