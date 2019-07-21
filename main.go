@@ -25,12 +25,12 @@ import (
 type Game struct {
 	GameID      int    `json:"gameid,omitempty"  db:"gameid"`
 	GameName   	string `json:"gamename,omitempty"  db:"gamename"`
-	Sellday		sqlx.NullString `json:"sellday,omitempty"  db:"sellday"`
-	BrandID  	sqlx.NullString `json:"brandid,omitempty"  db:"brandid"`
-	Median		sqlx.NullInt	   `json:"median,omitempty"  db:"median"`
-	Stdev	    sqlx.NullInt    `json:"stdev,omitempty"  db:"stdev"`
-	Count2		sqlx.NullInt    `json:"count2,omitempty"  db:"count2"`
-	Shoukai		sqlx.NullString `json:"shoukai,omitempty"  db:"shoukai"`
+	Sellday		string `json:"sellday,omitempty"  db:"sellday"`
+	BrandID   string `json:"brandid,omitempty"  db:"brandid"`
+	Median		int	   `json:"median,omitempty"  db:"median"`
+	Stdev	    int    `json:"stdev,omitempty"  db:"stdev"`
+	Count2		int    `json:"count2,omitempty"  db:"count2"`
+	Shoukai		string `json:"shoukai,omitempty"  db:"shoukai"`
 	// NowIntention int	   `json:"nowintention,omitempty"  db:"nowintention"`
 }
 
@@ -86,7 +86,7 @@ func main() {
 	// withLogin.POST("/rightButton", rightButtonHandler)
 	game := Game{}
 	if err = db.Get(&game, "SELECT gameid, gamename, sellday, brandid, median, stdev, count2, shoukai FROM gamelist WHERE gameid=27000"); err !=nil {
-		log.Printf("failed get by error '%#v'", err)
+		// log.Printf("failed get by error '%#v'", err)
 		return
 	}
 	fmt.Println(game)
