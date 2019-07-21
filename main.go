@@ -13,7 +13,7 @@ import (
 	"github.com/labstack/echo"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/middleware"
-	// "github.com/srinathgs/mysqlstore"
+	"github.com/srinathgs/mysqlstore"
 	"golang.org/x/crypto/bcrypt"
 	"database/sql"
 
@@ -51,10 +51,10 @@ func main() {
         panic(err.Error())
     }
 	defer db.Close()
-	// store, err := mysqlstore.NewMySQLStoreFromConnection(db.DB, "sessions", "/", 60*60*24*14, []byte("secret-token"))
-	// if err != nil {
-	// 	panic(err)
-	// }
+	store, err := mysqlstore.NewMySQLStoreFromConnection(db.DB, "sessions", "/", 60*60*24*14, []byte("secret-token"))
+	if err != nil {
+		panic(err)
+	}
 
 	e := echo.New()
 	e.Use(middleware.Logger())
