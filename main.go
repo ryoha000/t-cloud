@@ -16,35 +16,43 @@ import (
 	"github.com/labstack/echo/middleware"
 	"github.com/srinathgs/mysqlstore"
 	"golang.org/x/crypto/bcrypt"
-	// "database/sql"
+	"database/sql"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 )
 
+type NullInt64 struct {    // 新たに型を定義
+    sql.NullInt64
+}
+
+type NullString struct {    // 新たに型を定義
+    sql.NullString
+}
+
 type Game struct {
 	GameID      int    `json:"gameid,omitempty"  db:"gameid"`
-	GameName   	string `json:"gamename,omitempty"  db:"gamename"`
-	Sellday		string `json:"sellday,omitempty"  db:"sellday"`
-	BrandID   string `json:"brandid,omitempty"  db:"brandid"`
-	Median		int	   `json:"median,omitempty"  db:"median"`
-	Stdev	    int    `json:"stdev,omitempty"  db:"stdev"`
-	Count2		int    `json:"count2,omitempty"  db:"count2"`
-	Shoukai		string `json:"shoukai,omitempty"  db:"shoukai"`
+	GameName   	NullString `json:"gamename,omitempty"  db:"gamename"`
+	Sellday		NullString `json:"sellday,omitempty"  db:"sellday"`
+	BrandID   	NullString `json:"brandid,omitempty"  db:"brandid"`
+	Median		NullInt64	   `json:"median,omitempty"  db:"median"`
+	Stdev	    NullInt64    `json:"stdev,omitempty"  db:"stdev"`
+	Count2		NullInt64    `json:"count2,omitempty"  db:"count2"`
+	Shoukai		NullString `json:"shoukai,omitempty"  db:"shoukai"`
 	// NowIntention int	   `json:"nowintention,omitempty"  db:"nowintention"`
 }
 
 type GameIntention struct {
 	GameID      int    `json:"gameid,omitempty"  db:"gameid"`
-	GameName   	string `json:"gamename,omitempty"  db:"gamename"`
-	Median		int	   `json:"median,omitempty"  db:"median"`
-	NowIntention int	   `json:"nowintention,omitempty"  db:"nowintention"`
+	GameName   	NullString `json:"gamename,omitempty"  db:"gamename"`
+	Median		NullInt64	   `json:"median,omitempty"  db:"median"`
+	NowIntention NullInt64	   `json:"nowintention,omitempty"  db:"nowintention"`
 }
 
 type AwsJan struct {
 	GameID		int		`json:"gameid,omitempty"  db:"gameid"`
 	Aws			string	`json:"aws,omitempty"  db:"aws"`
-	Jan			string	`json:"jan,omitempty"  db:"jan"`
+	Jan			NullString	`json:"jan,omitempty"  db:"jan"`
 }
 
 var (
@@ -122,13 +130,13 @@ type ButtonRequestBody struct {
 type Joutai struct {
 	GameID int `json:"gameid,omitempty" form:"gameid"`
 	Username   string `json:"username,omitempty"  db:"Username"`
-	NowIntention int	   `json:"nowintention,omitempty"  db:"nowintention"`
+	NowIntention NullInt64	   `json:"nowintention,omitempty"  db:"nowintention"`
 }
 
 type Kekka struct {
-	GameID int `json:"gameid,omitempty" form:"gameid"`
+	GameID 		int `json:"gameid,omitempty" form:"gameid"`
 	GameName   	string `json:"gamename,omitempty"  db:"gamename"`
-	Median		int	   `json:"median,omitempty"  db:"median"`
+	Median		NullInt64	   `json:"median,omitempty"  db:"median"`
 }
 
 func postSignUpHandler(c echo.Context) error {
@@ -277,11 +285,11 @@ func getGameInfoHandler(c echo.Context) error {
 	db.Select(&AJ,"SELECT aws, jan FROM aws_jan WHERE gameid=?", gameID)
 	game := Game{}
 	db.Get(&game, "SELECT gameid, gamename, sellday, brandid, median, stdev, count2, shoukai FROM gamelist WHERE gameid=?", gameID)
-	if game.GameName == "" {
-		return c.NoContent(http.StatusNotFound)
-	}
+	// if game.GameName == "" {
+	// 	return c.NoContent(http.StatusNotFound)
+	// }
 
-	return c.JSON(http.StatusOK, game.GameName)
+	return c.JSON(http.StatusOK, game)
 }
 
 // func rightButtonHandler(c echo.Context) error {
