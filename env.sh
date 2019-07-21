@@ -1,0 +1,5 @@
+export DB_USERNAME="root"
+export DB_PASSWORD="Kana_Kusunoki0216"
+export DB_HOSTNAME="localhost"
+export DB_PORT="3306"
+export DB_DATABASE="root"
