@@ -64,7 +64,7 @@ func main() {
 
 	e := echo.New()
 	e.Use(middleware.Logger())
-	// e.Use(session.Middleware(store))
+	e.Use(session.Middleware(store))
 
 	e.GET("/ping", func(c echo.Context) error {
 		return c.String(http.StatusOK, "pong")
