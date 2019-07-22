@@ -325,8 +325,11 @@ func searchTitleHandler(c echo.Context) error {
 	req := SearchRequestBody{}
 	c.Bind(&req)
 	word := req.Word
+	fmt.Printf(word)
 	kensaku := []Kekka{}
-	db.Select(&kensaku,"SELECT gameid, brandname, gamename, median FROM gamelist inner join brandlist on brandlist.brandid = gamelist.brandid WHERE gamename like ?","'%" + word + "%'" )
+	if err := db.Select(&kensaku,"SELECT gameid, brandname, gamename, median FROM gamelist inner join brandlist on brandlist.brandid = gamelist.brandid WHERE gamename like ?","'%" + word + "%'" ); err != nil{
+		log.Printf("failed to ping by error '%#v'", err)
+	}
 	return c.JSON(http.StatusOK, kensaku)
 }
 
