@@ -394,7 +394,7 @@ func searchMedianHandler(c echo.Context) error {
 	c.Bind(&req)
 	word := req.Word
 	kensaku := []Kekka{}
-	db.Select(&kensaku,"SELECT gameid, gamename, brandname, gamelist.median FROM gamelist inner join brandlist on id = brandid WHERE median > ? order by gamelist.median",word )
+	db.Select(&kensaku,"SELECT gameid, gamename, brandname, gamelist.median FROM gamelist inner join brandlist on id = brandid WHERE gamelist.median > ? order by gamelist.median",word )
 	return c.JSON(http.StatusOK, kensaku)
 }
 
