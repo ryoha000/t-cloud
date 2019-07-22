@@ -155,7 +155,7 @@ type AmaSuru struct{
 }
 
 type Kekka struct {
-	GameID 		int `json:"gameid,omitempty" form:"gameid"`
+	GameID 		int `json:"gameid,omitempty" db:"gameid"`
 	GameName   	string `json:"gamename,omitempty"  db:"gamename"`
 	Brandname	NullString	 `json:"brandname,omitempty"  db:"brandname"`
 	Median		NullInt64	   `json:"median,omitempty"  db:"median"`
