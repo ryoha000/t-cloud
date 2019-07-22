@@ -131,7 +131,7 @@ type User struct {
 }
 
 type SearchRequestBody struct {
-	Word string `json:"word,omitempty" form:"word"`
+	Word string `json:"word,omitempty"`
 }
 
 type ButtonRequestBody struct {
