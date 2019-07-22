@@ -133,6 +133,17 @@ type Joutai struct {
 	NowIntention NullInt64	   `json:"nowintention,omitempty"  db:"nowintention"`
 }
 
+type Amazon struct{
+	Hontai		string
+	Souryo		string
+	URL			string
+}
+
+type Surugaya struct{
+	Nedan		string
+	URL			string
+}
+
 type Kekka struct {
 	GameID 		int `json:"gameid,omitempty" form:"gameid"`
 	GameName   	string `json:"gamename,omitempty"  db:"gamename"`
@@ -282,12 +293,50 @@ func getGameInfoHandler(c echo.Context) error {
 
 	gameID := c.Param("gameID")
 	AJ := []AwsJan{}
+	// Ama := []Amazon{}
+	// Suru := []Surugaya{}
+	amaP := []string{}
+	amaS := []string{}
+	amaU := []string{}
 	db.Select(&AJ,"SELECT aws, jan FROM a_j WHERE gameid=?", gameID)
 	for i := 0; i < len(AJ); i++ {
-		aws := AJ[i].Aws
-		amazon(aws)
-		jan := AJ[i].Jan
-		surugaya(jan)
+		as := AJ[i].Aws
+		var hontai string
+		var souryo string
+		var url string
+		url = "https://www.amazon.co.jp/gp/offer-listing/" + as + "/ref=dp_olp_used?ie=UTF8&condition=used"
+		amaU = append(amaU, url)
+		//goquery、ページを取得
+		res, err := http.Get(url)
+		if err != nil {
+			// handle error
+		}
+		defer res.Body.Close()
+		utfBody := transform.NewReader(bufio.NewReader(res.Body), japanese.ShiftJIS.NewDecoder())
+		doc, err := goquery.NewDocumentFromReader(utfBody)
+		hontai = doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn > span").Text()
+		souryo = doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn > p > span > span.olpShippingPrice").Text()
+		if len(hontai) < 1 {
+			fmt.Printf("中古なし")
+			amaP = append(amaP,"中古なし")
+			amaS = append(amaS,"")
+		} else {
+			fmt.Println("Amazon：￥" + hontai[23:])
+			amaP = append(amaP,"￥" + hontai[23:])
+			if len(souryo) < 6 {
+				fmt.Printf("送料無料")
+				amaS = append(amaS,"送料無料")
+			} else {
+				fmt.Println("送料：￥" + souryo[7:])
+				amaS = append(amaS,"送料：￥" + souryo[7:])
+			}
+			fmt.Printf("AmazonURL:" + url)
+		}
+
+
+
+		// jan := AJ[i].Jan
+		// Suru[i] = surugaya(jan)
 	}
 	game := Game{}
 	db.Get(&game, "SELECT gameid, gamename, sellday, brandid, median, stdev, count2, shoukai FROM gamelist WHERE gameid=?", gameID)
@@ -295,7 +344,7 @@ func getGameInfoHandler(c echo.Context) error {
 	// 	return c.NoContent(http.StatusNotFound)
 	// }
 
-	return c.JSON(http.StatusOK, AJ[1])
+	return c.JSON(http.StatusOK, amaP)
 }
 
 // func rightButtonHandler(c echo.Context) error {
@@ -355,12 +404,12 @@ func searchTitleHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, kensaku)
 }
 
-func amazon(as string)(hontai string,souryo string) {
+func amazon(as string)(hontai string,souryo string,url string) {
 	//スクレイピング対象URLを設定
-	sc_url := "https://www.amazon.co.jp/gp/offer-listing/" + as + "/ref=dp_olp_used?ie=UTF8&condition=used"
+	url = "https://www.amazon.co.jp/gp/offer-listing/" + as + "/ref=dp_olp_used?ie=UTF8&condition=used"
  
 	//goquery、ページを取得
-	res, err := http.Get(sc_url)
+	res, err := http.Get(url)
 	if err != nil {
     	// handle error
 	}
@@ -374,6 +423,8 @@ func amazon(as string)(hontai string,souryo string) {
 	souryo = doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn > p > span > span.olpShippingPrice").Text()
 	if len(hontai) < 1 {
 		fmt.Printf("中古なし")
+		hontai = ""
+		souryo = ""
 	} else {
 		fmt.Println("Amazon：￥" + hontai[23:])
 		if len(souryo) < 6 {
@@ -381,10 +432,10 @@ func amazon(as string)(hontai string,souryo string) {
 		} else {
 			fmt.Println("送料：￥" + souryo[7:])
 		}
-		fmt.Printf("AmazonURL:" + sc_url)
+		fmt.Printf("AmazonURL:" + url)
 	}
 	
-	return hontai,souryo
+	return hontai,souryo,url
 }
 
 // func sofmap(jan string) {
@@ -448,8 +499,6 @@ func surugaya(jan NullString) (nedan[6] string,urls[6] string) {
 			}
 
 		
-
-			// var nedan [6]string
 			for i := 1; i < 4; i++ {
 				var s string
 				s = strconv.Itoa(i)
