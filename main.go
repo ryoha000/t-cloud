@@ -348,7 +348,7 @@ func boughtHandler(c echo.Context) error {
 			return c.String(http.StatusInternalServerError, "something wrong in getting session")
 		}
 	userName := sess.Values["userName"]
-	db.Exec("UPDATE intention_table SET intention = 3 WHERE username=? and gameid = ?", userName, gameid)
+	db.Exec("insert into intention_table (username,gameid,intention) values (?,?,3) on DUPLICATE KEY UPDATE intention = values(intention) WHERE username=? and gameid = ?", userName, gameid)
 	return c.NoContent(http.StatusOK)
 }
 
@@ -362,7 +362,7 @@ func ariHandler(c echo.Context) error {
 			return c.String(http.StatusInternalServerError, "something wrong in getting session")
 		}
 	userName := sess.Values["userName"]
-	db.Exec("UPDATE intention_table SET intention = 2 WHERE username=? and gameid = ?", userName, gameid)
+	db.Exec("insert into intention_table (username,gameid,intention) values (?,?,3) on DUPLICATE KEY UPDATE intention = values(intention) WHERE username=? and gameid = ?", userName, gameid)
 	return c.NoContent(http.StatusOK)
 }
 
@@ -376,7 +376,7 @@ func imahaxHandler(c echo.Context) error {
 			return c.String(http.StatusInternalServerError, "something wrong in getting session")
 		}
 	userName := sess.Values["userName"]
-	db.Exec("UPDATE intention_table SET intention = 1 WHERE username=? and gameid = ?", userName, gameid)
+	db.Exec("insert into intention_table (username,gameid,intention) values (?,?,3) on DUPLICATE KEY UPDATE intention = values(intention) WHERE username=? and gameid = ?", userName, gameid)
 	return c.NoContent(http.StatusOK)
 }
 
@@ -390,7 +390,7 @@ func naiHandler(c echo.Context) error {
 			return c.String(http.StatusInternalServerError, "something wrong in getting session")
 		}
 	userName := sess.Values["userName"]
-	db.Exec("UPDATE intention_table SET intention = 0 WHERE username=? and gameid = ?", userName, gameid)
+	db.Exec("insert into intention_table (username,gameid,intention) values (?,?,3) on DUPLICATE KEY UPDATE intention = values(intention) WHERE username=? and gameid = ?", userName, gameid)
 	return c.NoContent(http.StatusOK)
 }
 
