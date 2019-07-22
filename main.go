@@ -274,7 +274,7 @@ func getIntentionHandler(c echo.Context) error {
 		}
 	userName := sess.Values["userName"]
 	conditions := []GameIntention{}
-	db.Select(&conditions,"SELECT gamelist.gameid, gamename, median, intention,brandname FROM gamelist inner JOIN intention_table ON gamelist.gameid = intention_table.gameid inner join brandlist ON id=brandid WHERE username=?", userName)
+	db.Select(&conditions,"SELECT gamelist.gameid, gamename, gamelist.median, intention,brandname FROM gamelist inner JOIN intention_table ON gamelist.gameid = intention_table.gameid inner join brandlist ON id=brandid WHERE username=?", userName)
 
 
 	return c.JSON(http.StatusOK, conditions)
@@ -299,7 +299,7 @@ func getGameInfoHandler(c echo.Context) error {
 		AS = append(AS,AmaSuru{a,s})
 	}
 	game := Game1{}
-	db.Get(&game, "SELECT gameid, gamename, sellday, brandname, median, stdev, count2, shoukai FROM gamelist inner join brandlist on brandid = id WHERE gameid=?", gameID)
+	db.Get(&game, "SELECT gameid, gamename, sellday, brandname, gamelist.median, stdev, count2, shoukai FROM gamelist inner join brandlist on brandid = id WHERE gameid=?", gameID)
 	nowintention := Intention{}
 	db.Get(&nowintention, "SELECT intention FROM gamelist inner JOIN intention_table ON gamelist.gameid = intention_table.gameid WHERE gameid=? and username=?", gameID, userName)
 	// if game.GameName == "" {
