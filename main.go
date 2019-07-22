@@ -137,6 +137,7 @@ func main() {
 	withLogin.POST("/leftButton", leftButtonHandler)
 	withLogin.POST("/title", searchTitleHandler)
 	withLogin.POST("/brand", searchBrandHandler)
+	withLogin.POST("/median", searchMedianHandler)
 	withLogin.POST("/bought", boughtHandler)
 	withLogin.POST("/ari", ariHandler)
 	withLogin.POST("/imahax", imahaxHandler)
@@ -158,6 +159,10 @@ type User struct {
 
 type SearchRequestBody struct {
 	Word string `json:"word,omitempty"`
+}
+
+type SearchMRequestBody struct {
+	Word int `json:"word,omitempty"`
 }
 
 type ButtonRequestBody struct {
@@ -325,7 +330,7 @@ func getGameInfoHandler(c echo.Context) error {
 func getBrandInfoHandler(c echo.Context) error {
 	brandID := c.Param("brandID")
 	brand := []Brand{}
-	db.Select(&brand, "SELECT gameid, gamename, sellday, brandname, brandlist.median, url, twitter FROM gamelist inner join brandlist on brandid = id WHERE brandid=?", brandID)
+	db.Select(&brand, "SELECT gameid, gamename, sellday, brandname, brandlist.median, url, twitter FROM gamelist inner join brandlist on brandid = id WHERE brandid=? order by gameid", brandID)
 	return c.JSON(http.StatusOK, brand)
 }
 
@@ -369,7 +374,7 @@ func searchTitleHandler(c echo.Context) error {
 	word := req.Word
 	fmt.Printf(word)
 	kensaku := []Kekka{}
-	if err := db.Select(&kensaku,"SELECT gameid, gamename, brandname, gamelist.median FROM gamelist inner join brandlist on id = brandid WHERE gamename like ?","%" + word + "%" ); err != nil{
+	if err := db.Select(&kensaku,"SELECT gameid, gamename, brandname, gamelist.median FROM gamelist inner join brandlist on id = brandid WHERE gamename like ? order by gamelist.median","%" + word + "%" ); err != nil{
 		log.Printf("failed to ping by error '%#v'", err)
 	}
 	return c.JSON(http.StatusOK, kensaku)
@@ -380,7 +385,16 @@ func searchBrandHandler(c echo.Context) error {
 	c.Bind(&req)
 	word := req.Word
 	kensaku := []Kekka{}
-	db.Select(&kensaku,"SELECT gameid, gamename, brandname, gamelist.median FROM gamelist inner join brandlist on id = brandid WHERE brandname like ?","%" + word + "%" )
+	db.Select(&kensaku,"SELECT gameid, gamename, brandname, gamelist.median FROM gamelist inner join brandlist on id = brandid WHERE brandname like ? order by gamelist.median","%" + word + "%" )
+	return c.JSON(http.StatusOK, kensaku)
+}
+
+func searchMedianHandler(c echo.Context) error {
+	req := SearchRequestBody{}
+	c.Bind(&req)
+	word := req.Word
+	kensaku := []Kekka{}
+	db.Select(&kensaku,"SELECT gameid, gamename, brandname, gamelist.median FROM gamelist inner join brandlist on id = brandid WHERE median > ? order by gamelist.median","%" + word + "%" )
 	return c.JSON(http.StatusOK, kensaku)
 }
 
