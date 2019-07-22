@@ -46,6 +46,7 @@ type Game1 struct {
 	GameID      int    `json:"gameid,omitempty"  db:"gameid"`
 	GameName   	NullString `json:"gamename,omitempty"  db:"gamename"`
 	Sellday		NullString `json:"sellday,omitempty"  db:"sellday"`
+	BrandID   	int `json:"brandid,omitempty"  db:"brandid"`
 	BrandName   	string `json:"brandname,omitempty"  db:"brandname"`
 	Median		NullInt64	   `json:"median,omitempty"  db:"median"`
 	Stdev	    NullInt64    `json:"stdev,omitempty"  db:"stdev"`
@@ -53,6 +54,17 @@ type Game1 struct {
 	Shoukai		NullString `json:"shoukai,omitempty"  db:"shoukai"`
 	// NowIntention int	   `json:"nowintention,omitempty"  db:"nowintention"`
 }
+
+type Brand struct {
+	GameID      int    `json:"gameid,omitempty"  db:"gameid"`
+	GameName   	NullString `json:"gamename,omitempty"  db:"gamename"`
+	Sellday		NullString `json:"sellday,omitempty"  db:"sellday"`
+	BrandName   	string `json:"brandname,omitempty"  db:"brandname"`
+	Median		NullInt64	   `json:"median,omitempty"  db:"median"`
+	URL			NullString	`json:"url,omitempty"  db:"url"`
+	Twitter			NullString	`json:"twitter,omitempty"  db:"twitter"`
+}
+
 
 type GameInfo struct {
 	Game		Game1	`json:"game,omitempty"`
@@ -117,6 +129,7 @@ func main() {
 	withLogin := e.Group("")
 	withLogin.Use(checkLogin)
 	withLogin.GET("/games/:gameID", getGameInfoHandler)
+	withLogin.GET("/brands/:brandID", getBrandInfoHandler)
 	// withLogin.GET("/cities/:cityName", getCityInfoHandler)
 	withLogin.GET("/mypage", getIntentionHandler)
 	withLogin.GET("/whoami", getWhoAmIHandler)
@@ -299,7 +312,7 @@ func getGameInfoHandler(c echo.Context) error {
 		AS = append(AS,AmaSuru{a,s})
 	}
 	game := Game1{}
-	db.Get(&game, "SELECT gameid, gamename, sellday, brandname, gamelist.median, stdev, count2, shoukai FROM gamelist inner join brandlist on brandid = id WHERE gameid=?", gameID)
+	db.Get(&game, "SELECT gameid, gamename, sellday, brandid, brandname, gamelist.median, stdev, count2, shoukai FROM gamelist inner join brandlist on brandid = id WHERE gameid=?", gameID)
 	nowintention := Intention{}
 	db.Get(&nowintention, "SELECT intention FROM gamelist inner JOIN intention_table ON gamelist.gameid = intention_table.gameid WHERE gameid=? and username=?", gameID, userName)
 	// if game.GameName == "" {
@@ -307,6 +320,13 @@ func getGameInfoHandler(c echo.Context) error {
 	// }
 	gameInfo := GameInfo{game,AS,nowintention}
 	return c.JSON(http.StatusOK, gameInfo)
+}
+
+func getBrandInfoHandler(c echo.Context) error {
+	brandID := c.Param("brandID")
+	brand := Brand{}
+	db.Get(&brand, "SELECT gameid, gamename, sellday, brandname, brandlist.median, url, twitter FROM gamelist inner join brandlist on brandid = id WHERE brandid=?", brandID)
+	return c.JSON(http.StatusOK, brand)
 }
 
 func rightButtonHandler(c echo.Context) error {
