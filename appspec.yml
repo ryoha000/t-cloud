@@ -2,4 +2,4 @@ on: 0.0
 os: linux
 files:
   - source: ./
-    destination: /home/ec2-user/go/src/github.com/[ryoha]/go/src/github.com/ryoha000
+    destination: /home/ec2-user/go/src
