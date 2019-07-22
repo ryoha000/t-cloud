@@ -109,7 +109,13 @@ func main() {
 	withLogin.GET("/whoami", getWhoAmIHandler)
 	withLogin.POST("/rightButton", rightButtonHandler)
 	withLogin.POST("/leftButton", leftButtonHandler)
-	
+	withLogin.POST("/title", searchTitleHandler)
+	withLogin.POST("/brand", searchBrandHandler)
+	withLogin.POST("/bought", boughtHandler)
+	withLogin.POST("/ari", ariHandler)
+	withLogin.POST("/imahax", imahaxHandler)
+	withLogin.POST("/nai", naiHandler)
+
 	e.Start(":4000")
 }
 
@@ -322,6 +328,72 @@ func searchTitleHandler(c echo.Context) error {
 	db.Select(&kensaku,"SELECT gameid, brandname, gamename, median FROM gamelist inner join brandlist on brandlist.brandid = gamelist.brandid WHERE gamename like '%?%'",word )
 	return c.JSON(http.StatusOK, kensaku)
 }
+
+func searchBrandHandler(c echo.Context) error {
+	req := SearchRequestBody{}
+	c.Bind(&req)
+	word := req.Word
+	kensaku := []Kekka{}
+	db.Select(&kensaku,"SELECT gameid, brandname, gamename, median FROM gamelist inner join brandlist on brandlist.brandid = gamelist.brandid WHERE brandname like '%?%'",word )
+	return c.JSON(http.StatusOK, kensaku)
+}
+
+func boughtHandler(c echo.Context) error {
+	req := ButtonRequestBody{}
+	c.Bind(&req)
+	gameid := req.GameID
+	sess, err := session.Get("sessions", c)
+		if err != nil {
+			fmt.Println(err)
+			return c.String(http.StatusInternalServerError, "something wrong in getting session")
+		}
+	userName := sess.Values["userName"]
+	db.Exec("UPDATE intention_table SET intention = 3 WHERE username=? and gameid = ?", userName, gameid)
+	return c.NoContent(http.StatusOK)
+}
+
+func ariHandler(c echo.Context) error {
+	req := ButtonRequestBody{}
+	c.Bind(&req)
+	gameid := req.GameID
+	sess, err := session.Get("sessions", c)
+		if err != nil {
+			fmt.Println(err)
+			return c.String(http.StatusInternalServerError, "something wrong in getting session")
+		}
+	userName := sess.Values["userName"]
+	db.Exec("UPDATE intention_table SET intention = 2 WHERE username=? and gameid = ?", userName, gameid)
+	return c.NoContent(http.StatusOK)
+}
+
+func imahaxHandler(c echo.Context) error {
+	req := ButtonRequestBody{}
+	c.Bind(&req)
+	gameid := req.GameID
+	sess, err := session.Get("sessions", c)
+		if err != nil {
+			fmt.Println(err)
+			return c.String(http.StatusInternalServerError, "something wrong in getting session")
+		}
+	userName := sess.Values["userName"]
+	db.Exec("UPDATE intention_table SET intention = 1 WHERE username=? and gameid = ?", userName, gameid)
+	return c.NoContent(http.StatusOK)
+}
+
+func naiHandler(c echo.Context) error {
+	req := ButtonRequestBody{}
+	c.Bind(&req)
+	gameid := req.GameID
+	sess, err := session.Get("sessions", c)
+		if err != nil {
+			fmt.Println(err)
+			return c.String(http.StatusInternalServerError, "something wrong in getting session")
+		}
+	userName := sess.Values["userName"]
+	db.Exec("UPDATE intention_table SET intention = 0 WHERE username=? and gameid = ?", userName, gameid)
+	return c.NoContent(http.StatusOK)
+}
+
 
 func amazon(as string)(Ama Amazon) {
 	//スクレイピング対象URLを設定
