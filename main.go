@@ -42,6 +42,12 @@ type Game struct {
 	// NowIntention int	   `json:"nowintention,omitempty"  db:"nowintention"`
 }
 
+type GameInfo struct {
+	Game		Game	`json:"game,omitempty"`
+	AmaSuru		[]AmaSuru `json:"amasuru,omitempty"`
+	// NowIntention int	   `json:"nowintention,omitempty"  db:"nowintention"`
+}
+
 type GameIntention struct {
 	GameID      int    `json:"gameid,omitempty"  db:"gameid"`
 	GameName   	NullString `json:"gamename,omitempty"  db:"gamename"`
@@ -134,14 +140,19 @@ type Joutai struct {
 }
 
 type Amazon struct{
-	Hontai		string
-	Souryo		string
-	URL			string
+	AmaP		string	`json:"amap,omitempty"`
+	Souryo		string	`json:"souryo,omitempty"`
+	URL			string	`json:"url,omitempty"`
 }
 
 type Surugaya struct{
-	Nedan		string
-	URL			string
+	SuruP		string	`json:"surup,omitempty"`
+	URL			string	`json:"url,omitempty"`
+}
+
+type AmaSuru struct{
+	Ama			Amazon		`json:"ama,omitempty"`
+	Suru		[]Surugaya	`json:"amap,omitempty"`
 }
 
 type Kekka struct {
@@ -293,58 +304,22 @@ func getGameInfoHandler(c echo.Context) error {
 
 	gameID := c.Param("gameID")
 	AJ := []AwsJan{}
-	// Ama := []Amazon{}
-	// Suru := []Surugaya{}
-	amaP := []string{}
-	amaS := []string{}
-	amaU := []string{}
+	AS := []AmaSuru{}
 	db.Select(&AJ,"SELECT aws, jan FROM a_j WHERE gameid=?", gameID)
 	for i := 0; i < len(AJ); i++ {
 		as := AJ[i].Aws
-		var hontai string
-		var souryo string
-		var url string
-		url = "https://www.amazon.co.jp/gp/offer-listing/" + as + "/ref=dp_olp_used?ie=UTF8&condition=used"
-		amaU = append(amaU, url)
-		//goquery、ページを取得
-		res, err := http.Get(url)
-		if err != nil {
-			// handle error
-		}
-		defer res.Body.Close()
-		utfBody := transform.NewReader(bufio.NewReader(res.Body), japanese.ShiftJIS.NewDecoder())
-		doc, err := goquery.NewDocumentFromReader(utfBody)
-		hontai = doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn > span").Text()
-		souryo = doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn > p > span > span.olpShippingPrice").Text()
-		if len(hontai) < 1 {
-			fmt.Printf("中古なし")
-			amaP = append(amaP,"中古なし")
-			amaS = append(amaS,"")
-		} else {
-			fmt.Println("Amazon：￥" + hontai[23:])
-			amaP = append(amaP,"￥" + hontai[23:])
-			if len(souryo) < 6 {
-				fmt.Printf("送料無料")
-				amaS = append(amaS,"送料無料")
-			} else {
-				fmt.Println("送料：￥" + souryo[7:])
-				amaS = append(amaS,"送料：￥" + souryo[7:])
-			}
-			fmt.Printf("AmazonURL:" + url)
-		}
-
-
-
-		// jan := AJ[i].Jan
-		// Suru[i] = surugaya(jan)
+		a := amazon(as)
+		jan := AJ[i].Jan
+		s := surugaya(jan)
+		AS = append(AS,AmaSuru{a,s})
 	}
 	game := Game{}
 	db.Get(&game, "SELECT gameid, gamename, sellday, brandid, median, stdev, count2, shoukai FROM gamelist WHERE gameid=?", gameID)
 	// if game.GameName == "" {
 	// 	return c.NoContent(http.StatusNotFound)
 	// }
-
-	return c.JSON(http.StatusOK, amaP)
+	gameInfo := GameInfo{game,AS}
+	return c.JSON(http.StatusOK, gameInfo)
 }
 
 // func rightButtonHandler(c echo.Context) error {
@@ -404,10 +379,9 @@ func searchTitleHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, kensaku)
 }
 
-func amazon(as string)(hontai string,souryo string,url string) {
+func amazon(as string)(Ama Amazon) {
 	//スクレイピング対象URLを設定
-	url = "https://www.amazon.co.jp/gp/offer-listing/" + as + "/ref=dp_olp_used?ie=UTF8&condition=used"
- 
+	url := "https://www.amazon.co.jp/gp/offer-listing/" + as + "/ref=dp_olp_used?ie=UTF8&condition=used"
 	//goquery、ページを取得
 	res, err := http.Get(url)
 	if err != nil {
@@ -419,23 +393,27 @@ func amazon(as string)(hontai string,souryo string,url string) {
  
 	doc, err := goquery.NewDocumentFromReader(utfBody)
  
-	hontai = doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn > span").Text()
-	souryo = doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn > p > span > span.olpShippingPrice").Text()
+	hontai := doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn > span").Text()
+	souryo := doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn > p > span > span.olpShippingPrice").Text()
 	if len(hontai) < 1 {
 		fmt.Printf("中古なし")
-		hontai = ""
-		souryo = ""
+		hontai = "中古なし"
+		souryo = "URLをクリックしてみたらあるかも"
+		Ama = Amazon{hontai,souryo,url}
+		
 	} else {
 		fmt.Println("Amazon：￥" + hontai[23:])
 		if len(souryo) < 6 {
 			fmt.Printf("送料無料")
+			Ama = Amazon{hontai[23:32],"送料無料",url}
 		} else {
-			fmt.Println("送料：￥" + souryo[7:])
+			fmt.Println("送料：￥" + souryo[7:15])
+			Ama = Amazon{hontai[23:32],souryo[7:15],url}
 		}
 		fmt.Printf("AmazonURL:" + url)
 	}
 	
-	return hontai,souryo,url
+	return Ama
 }
 
 // func sofmap(jan string) {
@@ -474,52 +452,45 @@ func amazon(as string)(hontai string,souryo string,url string) {
 // 		}
 // }
 
-func surugaya(jan NullString) (nedan[6] string,urls[6] string) {
+func surugaya(jan NullString) (Suru []Surugaya) {
 		//スクレイピング対象URLを設定
-		if !jan.Valid {
-			for i := 0; i < 6; i++{
-				nedan[i] = ""
-				urls[i] = ""
-			}
-			return nedan,urls
+		// Suru = make([]Surugaya, 0)
+		if !jan.Valid {			
+			Suru = append(Suru,Surugaya{"JAN不明",""})			
+			return Suru
 		} else {
 			url := "https://www.suruga-ya.jp/search?category=&search_word=&bottom_detail_search_bookmark=1&gtin=" + jan.String + "&id_s=&jan10=&mpn="
-		
 			//goquery、ページを取得
 			res, err := http.Get(url)
 			if err != nil {
 			}
 			defer res.Body.Close()
-		
-			utfBody := transform.NewReader(bufio.NewReader(res.Body), japanese.ShiftJIS.NewDecoder())
-		
+			utfBody := transform.NewReader(bufio.NewReader(res.Body), japanese.ShiftJIS.NewDecoder())	
 			doc, err := goquery.NewDocumentFromReader(utfBody)
 			if err != nil{
 				panic(err)
-			}
-
-		
+			}		
 			for i := 1; i < 4; i++ {
 				var s string
 				s = strconv.Itoa(i)
 				kakaku := doc.Find("#search_result > div > div:nth-child(" + s + ") > div.item_price > p:nth-child(1) > span > strong")
 				link,exists := doc.Find("#search_result > div.item_box.first_item > div:nth-child(" + s + ") > div.item_detail > p.title > a").Attr("href")
+				if i == 1{
+					if exists != true {
+						Suru = append(Suru,Surugaya{"駿河屋無し",""})
+					}
+				}
 				if exists != true {
-					nedan[i-1] = ""
-					urls[i-1] = ""
 				} else {
 				if len(kakaku.Text()) < 5 {
-					nedan[i-1] = ""
-					urls[i-1] = ""
 				} else {
-					nedan[i-1] = kakaku.Text()
-					urls[i-1] = "https://www.suruga-ya.jp/search?category=&search_word=&bottom_detail_search_bookmark=1&gtin=" + jan.String + "&id_s=&jan10=&mpn=" + link
-					fmt.Println("駿河屋：￥" + nedan[i-1][6:])
-					fmt.Println("駿河屋URL：" + urls[i-1])
-							
+					nedan := kakaku.Text()
+					urls := "https://www.suruga-ya.jp/search?category=&search_word=&bottom_detail_search_bookmark=1&gtin=" + jan.String + "&id_s=&jan10=&mpn=" + link
+					fmt.Println("駿河屋：￥" + nedan[6:])
+					fmt.Println("駿河屋URL：" + urls)
+					Suru = append(Suru,Surugaya{"￥"+ nedan[6:],urls})
 				}
-				}
-				
+				}	
 			}
 			for i := 1; i < 4; i++ {
 				var v string
@@ -527,20 +498,17 @@ func surugaya(jan NullString) (nedan[6] string,urls[6] string) {
 				kakaku := doc.Find("#search_result > div:nth-child(2) > div:nth-child(" + v + ") > div.item_price > p:nth-child(1) > span > strong")
 				link,exists := doc.Find("#search_result > div:nth-child(2) > div:nth-child(" + v + ") > div.item_detail > p.title > a").Attr("href")
 				if exists != true {
-					nedan[i+2] = ""
-					urls[i+2] = ""
 				} else {
 				if len(kakaku.Text()) < 5 {
-					nedan[i+2] = ""
-					urls[i+2] = ""
 				} else {
-					nedan[i+2] = kakaku.Text()
-					urls[i+2] = "https://www.suruga-ya.jp/search?category=&search_word=&bottom_detail_search_bookmark=1&gtin=" + jan.String + "&id_s=&jan10=&mpn=" + link
-					fmt.Println(nedan[i+2][6:])
-					fmt.Println("駿河屋URL：" + urls[i+2])
+					nedan := kakaku.Text()
+					urls := "https://www.suruga-ya.jp/search?category=&search_word=&bottom_detail_search_bookmark=1&gtin=" + jan.String + "&id_s=&jan10=&mpn=" + link
+					fmt.Println(nedan[6:])
+					fmt.Println("駿河屋URL：" + urls)
+					Suru = append(Suru,Surugaya{"￥" + nedan[6:],urls})
 				}
 				}
 			}
-			return nedan,urls
+			return Suru
 		}
 }
