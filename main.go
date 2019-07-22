@@ -158,6 +158,7 @@ type Kekka struct {
 	GameID 		int `json:"gameid,omitempty" form:"gameid"`
 	GameName   	string `json:"gamename,omitempty"  db:"gamename"`
 	Median		NullInt64	   `json:"median,omitempty"  db:"median"`
+	Brandname	NullString	 `json:"brandname,omitempty"  db:"brandname"`
 }
 
 func postSignUpHandler(c echo.Context) error {
