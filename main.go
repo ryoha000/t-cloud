@@ -163,6 +163,7 @@ type SearchRequestBody struct {
 
 type SearchMRequestBody struct {
 	Word int `json:"word,omitempty"`
+	Count int `json:"count,omitempty"`
 }
 
 type ButtonRequestBody struct {
@@ -390,11 +391,12 @@ func searchBrandHandler(c echo.Context) error {
 }
 
 func searchMedianHandler(c echo.Context) error {
-	req := SearchRequestBody{}
+	req := SearchMRequestBody{}
 	c.Bind(&req)
 	word := req.Word
+	count2 := req.Count
 	kensaku := []Kekka{}
-	db.Select(&kensaku,"SELECT gameid, gamename, brandname, gamelist.median FROM gamelist inner join brandlist on id = brandid WHERE gamelist.median > ? order by gamelist.median desc",word )
+	db.Select(&kensaku,"SELECT gameid, gamename, brandname, gamelist.median FROM gamelist inner join brandlist on id = brandid WHERE gamelist.median > ? and count2 > ? median order by gamelist.median desc",word,count2 )
 	return c.JSON(http.StatusOK, kensaku)
 }
 
