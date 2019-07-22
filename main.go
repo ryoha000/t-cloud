@@ -48,11 +48,21 @@ type GameInfo struct {
 	// NowIntention int	   `json:"nowintention,omitempty"  db:"nowintention"`
 }
 
+type Intention struct {
+	Intention	int		`json:"intention,omitempty"  db:"intention"`
+}
+
+type ProfileGame struct {
+	GameID      int    `json:"gameid,omitempty"  db:"gameid"`
+	GameName   	NullString `json:"gamename,omitempty"  db:"gamename"`
+	Median		NullInt64	   `json:"median,omitempty"  db:"median"`
+}
+
 type GameIntention struct {
 	GameID      int    `json:"gameid,omitempty"  db:"gameid"`
 	GameName   	NullString `json:"gamename,omitempty"  db:"gamename"`
 	Median		NullInt64	   `json:"median,omitempty"  db:"median"`
-	NowIntention NullInt64	   `json:"nowintention,omitempty"  db:"nowintention"`
+	NowIntention	int		`json:"intention,omitempty"  db:"intention"`
 }
 
 type AwsJan struct {
@@ -80,12 +90,6 @@ func main() {
         log.Printf("failed to ping by error '%#v'", err)
         return
     }
-
-	// store, err := mysqlstore.NewMySQLStoreFromConnection(db.DB, "sessions", "/", 60*60*24*14, []byte("secret-token"))
-	// if err != nil {
-	// 	panic(err)
-	// }
-
 	e := echo.New()
 	e.Use(middleware.Logger())
 	e.Use(session.Middleware(store))
@@ -93,23 +97,18 @@ func main() {
 	e.GET("/ping", func(c echo.Context) error {
 		return c.String(http.StatusOK, "pong")
 	})
-	e.GET("/games/:gameID", getGameInfoHandler)
 	e.POST("/login", postLoginHandler)
 	e.POST("/signup", postSignUpHandler)
 	// e.POST("/title", searchTitleHandler)
 
 	withLogin := e.Group("")
 	withLogin.Use(checkLogin)
+	withLogin.GET("/games/:gameID", getGameInfoHandler)
 	// withLogin.GET("/cities/:cityName", getCityInfoHandler)
 	withLogin.GET("/mypage", getIntentionHandler)
 	withLogin.GET("/whoami", getWhoAmIHandler)
-	// withLogin.POST("/rightButton", rightButtonHandler)
-	// game := Game{}
-	// if err = db.Get(&game, "SELECT gameid, gamename, sellday, brandid, median, stdev, count2, shoukai FROM gamelist WHERE gameid=27000"); err !=nil {
-	// 	log.Printf("failed get by error '%#v'", err)
-	// 	return
-	// }
-	// fmt.Println(game)
+	withLogin.POST("/rightButton", rightButtonHandler)
+	withLogin.POST("/leftButton", leftButtonHandler)
 	
 	e.Start(":4000")
 }
@@ -130,13 +129,7 @@ type SearchRequestBody struct {
 }
 
 type ButtonRequestBody struct {
-	GameID int `json:"gameid,omitempty" form:"gameid"`
-}
-
-type Joutai struct {
-	GameID int `json:"gameid,omitempty" form:"gameid"`
-	Username   string `json:"username,omitempty"  db:"Username"`
-	NowIntention NullInt64	   `json:"nowintention,omitempty"  db:"nowintention"`
+	GameID int `json:"gameid,omitempty"`
 }
 
 type Amazon struct{
@@ -261,47 +254,20 @@ func getWhoAmIHandler(c echo.Context) error {
 }
 
 func getIntentionHandler(c echo.Context) error {
-	db, err := sqlx.Open("mysql", "root@/mydb1")
-
-    if err != nil {
-        panic(err.Error())
-    }
-	defer db.Close()
 	sess, err := session.Get("sessions", c)
 		if err != nil {
 			fmt.Println(err)
 			return c.String(http.StatusInternalServerError, "something wrong in getting session")
 		}
-	
 	userName := sess.Values["userName"]
 	conditions := []GameIntention{}
-	db.Select(&conditions,"SELECT gameid, gamename, median, nowintention FROM gamelist JOIN intention ON id = gameid WHERE username=?", userName)
-	// defer rows.Close()
-	// for rows.Next() {
-	// 	condition := GameIntention{}
-	// 	var gameid int
-	// 	var gamename string
-	// 	var median int
-	// 	var NowIntention int
-	// 	if err := rows.Scan(&gameid, &gamename, &median,&NowIntention); err != nil {
-	// 		log.Fatal(err)
-	// 	}
-	// 	conditions = append(conditions,condition)
-	// }
-	// if err := rows.Err(); err != nil {
-	// 	log.Fatal(err)
-	// }
-	// // if condition == nil {
-	// // 	return c.NoContent(http.StatusNotFound)
-	// // }
+	db.Select(&conditions,"SELECT gamelist.gameid, gamename, median, intention FROM gamelist inner JOIN intention_table ON gamelist.gameid = intention_table.gameid WHERE username=?", userName)
+
 
 	return c.JSON(http.StatusOK, conditions)
-	// fmt.Fprint(w, GameIntention(conditions))
-	// return
 }
 
 func getGameInfoHandler(c echo.Context) error {
-
 	gameID := c.Param("gameID")
 	AJ := []AwsJan{}
 	AS := []AmaSuru{}
@@ -322,39 +288,46 @@ func getGameInfoHandler(c echo.Context) error {
 	return c.JSON(http.StatusOK, gameInfo)
 }
 
-// func rightButtonHandler(c echo.Context) error {
-// 	req := ButtonRequestBody{}
-// 	c.Bind(&req)
-// 	gameid := req.GameID
-// 	sess, err := session.Get("sessions", c)
-// 		if err != nil {
-// 			fmt.Println(err)
-// 			return c.String(http.StatusInternalServerError, "something wrong in getting session")
-// 		}
-	
-// 	userName := sess.Values["userName"]
-// 	nowIntenton := Joutai{}
-// 	nowIntention = db.QueryRow("SELECT nowintention FROM intention WHERE username=? and gameid=?", userName, gameid)
-// 	result, err := db.Exec("UPDATE intention SET nowintention = ? WHERE username=? and gameid = ?", nowIntention.NowIntention-1,userName, gameid)
-// 	// if err != nil {
-// 	// 	log.Fatal(err)
-// 	// }
+func rightButtonHandler(c echo.Context) error {
+	req := ButtonRequestBody{}
+	c.Bind(&req)
+	gameid := req.GameID
+	sess, err := session.Get("sessions", c)
+		if err != nil {
+			fmt.Println(err)
+			return c.String(http.StatusInternalServerError, "something wrong in getting session")
+		}
+	userName := sess.Values["userName"]
+	db.Exec("UPDATE intention_table SET intention = intention -1 WHERE username=? and gameid = ?", userName, gameid)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	return c.NoContent(http.StatusOK)
+}
 
-// 	return c.NoContent(http.StatusOK)
-// }
+func leftButtonHandler(c echo.Context) error {
+	req := ButtonRequestBody{}
+	c.Bind(&req)
+	gameid := req.GameID
+	sess, err := session.Get("sessions", c)
+		if err != nil {
+			fmt.Println(err)
+			return c.String(http.StatusInternalServerError, "something wrong in getting session")
+		}
+	userName := sess.Values["userName"]
+	db.Exec("UPDATE intention_table SET intention = intention +1 WHERE username=? and gameid = ?", userName, gameid)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	return c.NoContent(http.StatusOK)
+}
 
 func searchTitleHandler(c echo.Context) error {
-	db, err := sqlx.Open("mysql", "root@/mydb1")
-
-    if err != nil {
-        panic(err.Error())
-    }
-	defer db.Close()
 	req := SearchRequestBody{}
 	c.Bind(&req)
 	word := req.Word
 	kensaku := []Kekka{}
-	db.Select(&kensaku,"SELECT gameid, gamename, median FROM gamelist WHERE gamename=?", word)
+	db.Select(&kensaku,"SELECT gameid, brandname, gamename, median FROM gamelist inner join brandlist on brandlist.brandid = gamelist.brandid WHERE gamename like '%?%'",word )
 	// if err != nil {
 	// 	log.Fatal(err)
 	// }
