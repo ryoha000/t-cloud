@@ -327,7 +327,7 @@ func searchTitleHandler(c echo.Context) error {
 	word := req.Word
 	fmt.Printf(word)
 	kensaku := []Kekka{}
-	if err := db.Select(&kensaku,"SELECT gameid, brandname, gamename, gamelist.median FROM gamelist inner join brandlist on brandlist.brandid = gamelist.brandid WHERE gamename like ?","'%" + word + "%'" ); err != nil{
+	if err := db.Select(&kensaku,"SELECT gameid, brandname, gamename, gamelist.median FROM gamelist inner join brandlist on id = brandid WHERE gamename like ?","'%" + word + "%'" ); err != nil{
 		log.Printf("failed to ping by error '%#v'", err)
 	}
 	return c.JSON(http.StatusOK, kensaku)
@@ -338,7 +338,7 @@ func searchBrandHandler(c echo.Context) error {
 	c.Bind(&req)
 	word := req.Word
 	kensaku := []Kekka{}
-	db.Select(&kensaku,"SELECT gameid, brandname, gamename, gamelist.median FROM gamelist inner join brandlist on brandlist.brandid = gamelist.brandid WHERE brandname like ?","'%" + word + "%'" )
+	db.Select(&kensaku,"SELECT gameid, brandname, gamename, gamelist.median FROM gamelist inner join brandlist on id = brandid WHERE brandname like ?","'%" + word + "%'" )
 	return c.JSON(http.StatusOK, kensaku)
 }
 
