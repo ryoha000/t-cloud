@@ -325,7 +325,7 @@ func searchTitleHandler(c echo.Context) error {
 	c.Bind(&req)
 	word := req.Word
 	kensaku := []Kekka{}
-	db.Select(&kensaku,"SELECT gameid, brandname, gamename, median FROM gamelist inner join brandlist on brandlist.brandid = gamelist.brandid WHERE gamename like '%?%'",word )
+	db.Select(&kensaku,"SELECT gameid, brandname, gamename, median FROM gamelist inner join brandlist on brandlist.brandid = gamelist.brandid WHERE gamename like ?","'%" + word + "%'" )
 	return c.JSON(http.StatusOK, kensaku)
 }
 
@@ -334,7 +334,7 @@ func searchBrandHandler(c echo.Context) error {
 	c.Bind(&req)
 	word := req.Word
 	kensaku := []Kekka{}
-	db.Select(&kensaku,"SELECT gameid, brandname, gamename, median FROM gamelist inner join brandlist on brandlist.brandid = gamelist.brandid WHERE brandname like '%?%'",word )
+	db.Select(&kensaku,"SELECT gameid, brandname, gamename, median FROM gamelist inner join brandlist on brandlist.brandid = gamelist.brandid WHERE brandname like ?","'%" + word + "%'" )
 	return c.JSON(http.StatusOK, kensaku)
 }
 
