@@ -34,7 +34,19 @@ type Game struct {
 	GameID      int    `json:"gameid,omitempty"  db:"gameid"`
 	GameName   	NullString `json:"gamename,omitempty"  db:"gamename"`
 	Sellday		NullString `json:"sellday,omitempty"  db:"sellday"`
-	BrandID   	NullString `json:"brandid,omitempty"  db:"brandid"`
+	BrandID   	int `json:"brandid,omitempty"  db:"brandid"`
+	Median		NullInt64	   `json:"median,omitempty"  db:"median"`
+	Stdev	    NullInt64    `json:"stdev,omitempty"  db:"stdev"`
+	Count2		NullInt64    `json:"count2,omitempty"  db:"count2"`
+	Shoukai		NullString `json:"shoukai,omitempty"  db:"shoukai"`
+	// NowIntention int	   `json:"nowintention,omitempty"  db:"nowintention"`
+}
+
+type Game1 struct {
+	GameID      int    `json:"gameid,omitempty"  db:"gameid"`
+	GameName   	NullString `json:"gamename,omitempty"  db:"gamename"`
+	Sellday		NullString `json:"sellday,omitempty"  db:"sellday"`
+	BrandName   	string `json:"brandname,omitempty"  db:"brandname"`
 	Median		NullInt64	   `json:"median,omitempty"  db:"median"`
 	Stdev	    NullInt64    `json:"stdev,omitempty"  db:"stdev"`
 	Count2		NullInt64    `json:"count2,omitempty"  db:"count2"`
@@ -43,9 +55,9 @@ type Game struct {
 }
 
 type GameInfo struct {
-	Game		Game	`json:"game,omitempty"`
+	Game		Game1	`json:"game,omitempty"`
 	AmaSuru		[]AmaSuru `json:"amasuru,omitempty"`
-	// NowIntention int	   `json:"nowintention,omitempty"  db:"nowintention"`
+	Intention Intention	   `json:"intention,omitempty"`
 }
 
 type Intention struct {
@@ -63,6 +75,7 @@ type GameIntention struct {
 	GameName   	NullString `json:"gamename,omitempty"  db:"gamename"`
 	Median		NullInt64	   `json:"median,omitempty"  db:"median"`
 	NowIntention	int		`json:"intention,omitempty"  db:"intention"`
+	BrandName	string	`json:"brandname,omitempty"  db:"brandname"`
 }
 
 type AwsJan struct {
@@ -261,13 +274,19 @@ func getIntentionHandler(c echo.Context) error {
 		}
 	userName := sess.Values["userName"]
 	conditions := []GameIntention{}
-	db.Select(&conditions,"SELECT gamelist.gameid, gamename, median, intention FROM gamelist inner JOIN intention_table ON gamelist.gameid = intention_table.gameid WHERE username=?", userName)
+	db.Select(&conditions,"SELECT gamelist.gameid, gamename, median, intention,brandname FROM gamelist inner JOIN intention_table ON gamelist.gameid = intention_table.gameid inner join brandlist ON id=brandid WHERE username=?", userName)
 
 
 	return c.JSON(http.StatusOK, conditions)
 }
 
 func getGameInfoHandler(c echo.Context) error {
+	sess, err := session.Get("sessions", c)
+		if err != nil {
+			fmt.Println(err)
+			return c.String(http.StatusInternalServerError, "something wrong in getting session")
+		}
+	userName := sess.Values["userName"]
 	gameID := c.Param("gameID")
 	AJ := []AwsJan{}
 	AS := []AmaSuru{}
@@ -279,12 +298,14 @@ func getGameInfoHandler(c echo.Context) error {
 		s := surugaya(jan)
 		AS = append(AS,AmaSuru{a,s})
 	}
-	game := Game{}
-	db.Get(&game, "SELECT gameid, gamename, sellday, brandid, median, stdev, count2, shoukai FROM gamelist WHERE gameid=?", gameID)
+	game := Game1{}
+	db.Get(&game, "SELECT gameid, gamename, sellday, brandname, median, stdev, count2, shoukai FROM gamelist inner join brandlist on brandid = id WHERE gameid=?", gameID)
+	nowintention := Intention{}
+	db.Get(&nowintention, "SELECT intention FROM gamelist inner JOIN intention_table ON gamelist.gameid = intention_table.gameid WHERE gameid=? and username=?", gameID, userName)
 	// if game.GameName == "" {
 	// 	return c.NoContent(http.StatusNotFound)
 	// }
-	gameInfo := GameInfo{game,AS}
+	gameInfo := GameInfo{game,AS,nowintention}
 	return c.JSON(http.StatusOK, gameInfo)
 }
 
@@ -480,7 +501,7 @@ func surugaya(jan NullString) (Suru []Surugaya) {
 			Suru = append(Suru,Surugaya{"JAN不明",""})			
 			return Suru
 		} else {
-			url := "https://www.suruga-ya.jp/search?category=&search_word=&bottom_detail_search_bookmark=1&gtin=" + jan.String + "&id_s=&jan10=&mpn="
+			url := "https://www.suruga-ya.jp" + jan.String
 			//goquery、ページを取得
 			res, err := http.Get(url)
 			if err != nil {
