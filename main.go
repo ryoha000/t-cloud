@@ -155,12 +155,6 @@ type Kekka struct {
 }
 
 func postSignUpHandler(c echo.Context) error {
-	db, err := sqlx.Open("mysql", "root@/mydb1")
-
-    if err != nil {
-        panic(err.Error())
-    }
-	defer db.Close()
 	req := LoginRequestBody{}
 	c.Bind(&req)
 
@@ -195,13 +189,11 @@ func postSignUpHandler(c echo.Context) error {
 }
 
 func postLoginHandler(c echo.Context) error {
-	db,err := sqlx.Open("mysql", "root@/mydb1")
-	defer db.Close()
 	req := LoginRequestBody{}
 	c.Bind(&req)
 
 	user := User{}
-	err = db.Get(&user, "SELECT * FROM users WHERE username=?", req.Username)
+	err := db.Get(&user, "SELECT * FROM users WHERE username=?", req.Username)
 	if err != nil {
 		return c.String(http.StatusInternalServerError, fmt.Sprintf("db error: %v", err))
 	}
@@ -328,27 +320,6 @@ func searchTitleHandler(c echo.Context) error {
 	word := req.Word
 	kensaku := []Kekka{}
 	db.Select(&kensaku,"SELECT gameid, brandname, gamename, median FROM gamelist inner join brandlist on brandlist.brandid = gamelist.brandid WHERE gamename like '%?%'",word )
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// if rows == "" {
-	// 	return c.NoContent(http.StatusNotFound)
-	// }
-	// defer rows.Close()
-	// kensaku := []Kekka{}
-	// for rows.Next() {
-	// 	kekka := Kekka{}
-	// 	var gameid int
-	// 	var gamename string
-	// 	var median int
-	// 	if err := rows.Scan(&gameid, &gamename, &median); err != nil {
-	// 		log.Fatal(err)
-	// 	}
-	// 	kensaku = append(kensaku,kekka)
-	// }
-	// if err := rows.Err(); err != nil {
-	// 	log.Fatal(err)
-	// }
 	return c.JSON(http.StatusOK, kensaku)
 }
 
