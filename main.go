@@ -324,8 +324,8 @@ func getGameInfoHandler(c echo.Context) error {
 
 func getBrandInfoHandler(c echo.Context) error {
 	brandID := c.Param("brandID")
-	brand := Brand{}
-	db.Get(&brand, "SELECT gameid, gamename, sellday, brandname, brandlist.median, url, twitter FROM gamelist inner join brandlist on brandid = id WHERE brandid=?", brandID)
+	brand := []Brand{}
+	db.Select(&brand, "SELECT gameid, gamename, sellday, brandname, brandlist.median, url, twitter FROM gamelist inner join brandlist on brandid = id WHERE brandid=?", brandID)
 	return c.JSON(http.StatusOK, brand)
 }
 
