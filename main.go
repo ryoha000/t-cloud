@@ -313,9 +313,14 @@ func getGameInfoHandler(c echo.Context) error {
 	for i := 0; i < len(AJ); i++ {
 		as := AJ[i].Aws
 		a := amazon(as)
-		jan := AJ[i].Jan.String
-		s := surugaya(jan)
-		AS = append(AS,AmaSuru{a,s})
+		jan := AJ[i].Jan
+		if jan.String == ''{
+			AS = append(AS,AmaSuru{a,''})
+		} else {
+			s := surugaya(jan)
+			AS = append(AS,AmaSuru{a,s})
+		}
+		
 	}
 	game := Game1{}
 	db.Get(&game, "SELECT gameid, gamename, sellday, brandid, brandname, gamelist.median, stdev, count2, shoukai FROM gamelist inner join brandlist on brandid = id WHERE gameid=?", gameID)
@@ -486,7 +491,7 @@ func amazon(as string)(Ama Amazon) {
 			Ama = Amazon{hontai[23:],"送料無料",url}
 		} else {
 			fmt.Println("送料：￥" + souryo[7:])
-			Ama = Amazon{hontai[23:],souryo[7:],url}
+			Ama = Amazon{hontai[23:32],souryo[7:],url}
 		}
 		fmt.Printf("AmazonURL:" + url)
 	}
