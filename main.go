@@ -313,7 +313,7 @@ func getGameInfoHandler(c echo.Context) error {
 	for i := 0; i < len(AJ); i++ {
 		as := AJ[i].Aws
 		a := amazon(as)
-		jan := AJ[i].Jan
+		jan := AJ[i].Jan.String
 		s := surugaya(jan)
 		AS = append(AS,AmaSuru{a,s})
 	}
