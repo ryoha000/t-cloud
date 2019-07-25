@@ -183,7 +183,7 @@ type Surugaya struct{
 
 type AmaSuru struct{
 	Ama			Amazon		`json:"ama,omitempty"`
-	Suru		[]Surugaya	`json:"amap,omitempty"`
+	Suru		[]Surugaya	`json:"suru,omitempty"`
 }
 
 type Kekka struct {
@@ -314,14 +314,8 @@ func getGameInfoHandler(c echo.Context) error {
 		as := AJ[i].Aws
 		a := amazon(as)
 		jan := AJ[i].Jan
-		if jan.Valid  == false{
-			s := []Surugaya{}
-			AS = append(AS,AmaSuru{a,s})
-		} else {
-			s := surugaya(jan)
-			AS = append(AS,AmaSuru{a,s})
-		}
-		
+		s := surugaya(jan)
+		AS = append(AS,AmaSuru{a,s})
 	}
 	game := Game1{}
 	db.Get(&game, "SELECT gameid, gamename, sellday, brandid, brandname, gamelist.median, stdev, count2, shoukai FROM gamelist inner join brandlist on brandid = id WHERE gameid=?", gameID)
@@ -543,7 +537,7 @@ func surugaya(jan NullString) (Suru []Surugaya) {
 			Suru = append(Suru,Surugaya{"JAN不明",""})			
 			return Suru
 		} else {
-			url := "https://www.suruga-ya.jp" + jan.String
+			url := "https://www.suruga-ya.jp/search?category=&search_word=&bottom_detail_search_bookmark=1&gtin=" + jan.String + "&id_s=&jan10=&mpn="
 			//goquery、ページを取得
 			res, err := http.Get(url)
 			if err != nil {
@@ -569,7 +563,7 @@ func surugaya(jan NullString) (Suru []Surugaya) {
 				if len(kakaku.Text()) < 5 {
 				} else {
 					nedan := kakaku.Text()
-					urls := "https://www.suruga-ya.jp/search?category=&search_word=&bottom_detail_search_bookmark=1&gtin=" + jan.String + "&id_s=&jan10=&mpn=" + link
+					urls := "https://www.suruga-ya.jp" + link
 					fmt.Println("駿河屋：￥" + nedan[6:])
 					fmt.Println("駿河屋URL：" + urls)
 					Suru = append(Suru,Surugaya{"￥"+ nedan[6:],urls})
@@ -586,7 +580,7 @@ func surugaya(jan NullString) (Suru []Surugaya) {
 				if len(kakaku.Text()) < 5 {
 				} else {
 					nedan := kakaku.Text()
-					urls := "https://www.suruga-ya.jp/search?category=&search_word=&bottom_detail_search_bookmark=1&gtin=" + jan.String + "&id_s=&jan10=&mpn=" + link
+					urls := "https://www.suruga-ya.jp" + link
 					fmt.Println(nedan[6:])
 					fmt.Println("駿河屋URL：" + urls)
 					Suru = append(Suru,Surugaya{"￥" + nedan[6:],urls})
