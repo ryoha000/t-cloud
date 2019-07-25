@@ -314,8 +314,9 @@ func getGameInfoHandler(c echo.Context) error {
 		as := AJ[i].Aws
 		a := amazon(as)
 		jan := AJ[i].Jan
-		if jan.String == ''{
-			AS = append(AS,AmaSuru{a,''})
+		if jan.Valid  == false{
+			s := []Surugaya{}
+			AS = append(AS,AmaSuru{a,s})
 		} else {
 			s := surugaya(jan)
 			AS = append(AS,AmaSuru{a,s})
