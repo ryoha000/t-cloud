@@ -483,10 +483,10 @@ func amazon(as string)(Ama Amazon) {
 		fmt.Println("Amazon：￥" + hontai[23:])
 		if len(souryo) < 6 {
 			fmt.Printf("送料無料")
-			Ama = Amazon{hontai[23:32],"送料無料",url}
+			Ama = Amazon{hontai[23:],"送料無料",url}
 		} else {
-			fmt.Println("送料：￥" + souryo[7:15])
-			Ama = Amazon{hontai[23:32],souryo[7:15],url}
+			fmt.Println("送料：￥" + souryo[7:])
+			Ama = Amazon{hontai[23:],souryo[7:],url}
 		}
 		fmt.Printf("AmazonURL:" + url)
 	}
