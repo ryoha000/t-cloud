@@ -545,18 +545,18 @@ func amazon(as string)(Ama Amazon) {
 	souryo := doc.Find("#olpOfferList > div > div > div:nth-child(3) > div.a-column.a-span2.olpPriceColumn > p > span > span.olpShippingPrice").Text()
 	if len(hontai) < 1 {
 		fmt.Printf("中古なし")
-		hontai = "中古なし"
-		souryo = "URLをクリックしてみたらあるかも"
+		hontai = "Amazon中古なし"
+		souryo = "クリックしてみたらあるかも"
 		Ama = Amazon{hontai,souryo,url}
 		
 	} else {
 		fmt.Println("Amazon：￥" + hontai[23:])
 		if len(souryo) < 6 {
 			fmt.Printf("送料無料")
-			Ama = Amazon{"本体：￥" + hontai[23:],"送料無料",url}
+			Ama = Amazon{"Amazon本体：￥" + hontai[23:],"送料無料",url}
 		} else {
 			fmt.Println("送料：￥" + souryo[7:])
-			Ama = Amazon{"本体：￥" + hontai[23:],"送料：￥" + souryo[7:],url}
+			Ama = Amazon{"Amazon本体：￥" + hontai[23:],"送料：￥" + souryo[7:],url}
 		}
 		fmt.Printf("AmazonURL:" + url)
 	}
@@ -636,7 +636,7 @@ func surugaya(jan NullString) (Suru []Surugaya) {
 					urls := "https://www.suruga-ya.jp" + link
 					fmt.Println("駿河屋：￥" + nedan[6:])
 					fmt.Println("駿河屋URL：" + urls)
-					Suru = append(Suru,Surugaya{"￥"+ nedan[6:],urls})
+					Suru = append(Suru,Surugaya{"駿河屋￥"+ nedan[6:],urls})
 				}
 				}	
 			}
