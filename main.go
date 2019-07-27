@@ -86,7 +86,7 @@ type GameIntention struct {
 	GameID      int    `json:"gameid,omitempty"  db:"gameid"`
 	GameName   	NullString `json:"gamename,omitempty"  db:"gamename"`
 	Median		NullInt64	   `json:"median,omitempty"  db:"median"`
-	NowIntention	int		`json:"intention,omitempty"  db:"intention"`
+	NowIntention	int		`json:"intention"  db:"intention"`
 	BrandName	string	`json:"brandname,omitempty"  db:"brandname"`
 }
 
@@ -320,7 +320,7 @@ func getIntentionHandler(c echo.Context) error {
 	userName := sess.Values["userName"]
 	conditions := []GameIntention{}
 	db.Select(&conditions,"SELECT gamelist.gameid, gamename, gamelist.median, intention,brandname FROM gamelist inner JOIN intention_table ON gamelist.gameid = intention_table.gameid inner join brandlist ON id=brandid WHERE username=?", userName)
-
+	fmt.Printf(conditions)
 
 	return c.JSON(http.StatusOK, conditions)
 }
