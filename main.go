@@ -174,6 +174,7 @@ type Amazon struct{
 	AmaP		string	`json:"amap,omitempty"`
 	Souryo		string	`json:"souryo,omitempty"`
 	URL			string	`json:"url,omitempty"`
+	asin		string	`json:"asin,omitempty"`
 }
 
 type Surugaya struct{
@@ -477,16 +478,16 @@ func amazon(as string)(Ama Amazon) {
 		fmt.Printf("中古なし")
 		hontai = "中古なし"
 		souryo = "URLをクリックしてみたらあるかも"
-		Ama = Amazon{hontai,souryo,url}
+		Ama = Amazon{hontai,souryo,url,as}
 		
 	} else {
 		fmt.Println("Amazon：￥" + hontai[23:])
 		if len(souryo) < 6 {
 			fmt.Printf("送料無料")
-			Ama = Amazon{hontai[23:],"送料無料",url}
+			Ama = Amazon{hontai[23:],"送料無料",url,as}
 		} else {
 			fmt.Println("送料：￥" + souryo[7:])
-			Ama = Amazon{hontai[23:32],souryo[7:],url}
+			Ama = Amazon{hontai[23:32],souryo[7:],url,as}
 		}
 		fmt.Printf("AmazonURL:" + url)
 	}
