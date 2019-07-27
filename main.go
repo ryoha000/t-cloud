@@ -90,6 +90,23 @@ type GameIntention struct {
 	BrandName	string	`json:"brandname,omitempty"  db:"brandname"`
 }
 
+type Osusume struct {
+	Osusume1	Osusume1 `json:"osusume1,omitempty"`
+	Osusume2	Osusume2 `json:"osusume2,omitempty"`
+}
+
+type Osusume1 struct {
+	GameID      int    `json:"gameid,omitempty"  db:"gameid"`
+	GameName   	string `json:"gamename,omitempty"  db:"gamename"`
+	Median		NullInt64	   `json:"median,omitempty"  db:"median"`
+	Message	string		`json:"message,omitempty"  db:"message"`
+	BrandName	string	`json:"brandname,omitempty"  db:"brandname"`
+}
+
+type Osusume2 struct {
+	Aws			string	`json:"aws,omitempty"  db:"aws"`
+}
+
 type AwsJan struct {
 	GameID		int		`json:"gameid,omitempty"  db:"gameid"`
 	Aws			string	`json:"aws,omitempty"  db:"aws"`
@@ -133,6 +150,9 @@ func main() {
 	// withLogin.GET("/cities/:cityName", getCityInfoHandler)
 	withLogin.GET("/mypage", getIntentionHandler)
 	withLogin.GET("/whoami", getWhoAmIHandler)
+	withLogin.GET("/games/home", getHomeHandler)
+	withLogin.GET("/games/osusume/create", createOsusumeHandler)
+	withLogin.GET("/games/osusume/delete", deleteOsusumeHandler)
 	withLogin.POST("/rightButton", rightButtonHandler)
 	withLogin.POST("/leftButton", leftButtonHandler)
 	withLogin.POST("/title", searchTitleHandler)
@@ -166,6 +186,11 @@ type SearchMRequestBody struct {
 	Count int `json:"count,omitempty"`
 }
 
+type OsusumeRequestBody struct {
+	GameID int `json:"gameid,omitempty"`
+	Message int `json:"message,omitempty"`
+}
+
 type ButtonRequestBody struct {
 	GameID int `json:"gameid,omitempty"`
 }
@@ -174,7 +199,6 @@ type Amazon struct{
 	AmaP		string	`json:"amap,omitempty"`
 	Souryo		string	`json:"souryo,omitempty"`
 	URL			string	`json:"url,omitempty"`
-	asin		string	`json:"asin,omitempty"`
 }
 
 type Surugaya struct{
@@ -457,6 +481,50 @@ func naiHandler(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
+func createOsusumeHandler(c echo.Context) error {
+	req := OsusumeRequestBody{}
+	c.Bind(&req)
+	gameid := req.GameID
+	message := req.Message
+	sess, err := session.Get("sessions", c)
+		if err != nil {
+			fmt.Println(err)
+			return c.String(http.StatusInternalServerError, "something wrong in getting session")
+		}
+	userName := sess.Values["userName"]
+	if userName == "ryoha" {
+		db.Exec("insert into osusume (gameid,message,now) values (?,?,true)", gameid,message)
+	}
+	return c.NoContent(http.StatusOK)
+}
+
+func deleteOsusumeHandler(c echo.Context) error {
+	req := OsusumeRequestBody{}
+	c.Bind(&req)
+	gameid := req.GameID
+	sess, err := session.Get("sessions", c)
+		if err != nil {
+			fmt.Println(err)
+			return c.String(http.StatusInternalServerError, "something wrong in getting session")
+		}
+	userName := sess.Values["userName"]
+	if userName == "ryoha" {
+		db.Exec("update osusume set now=false where gameid=?", gameid)
+	}
+	return c.NoContent(http.StatusOK)
+}
+
+func getHomeHandler(c echo.Context) error {
+	osusumes1 := []Osusume1{}
+	db.Select(&osusumes1,"SELECT gamelist.gameid, gamename, gamelist.median, message,brandname FROM gamelist inner join brandlist on brandid = id inner JOIN osusume ON gamelist.gameid = osusume.gameid where now=True")
+	osusumes2 := Osusume2{}
+	osusumes := []Osusume{}
+	for i:=0;i<len(osusumes1);i++{
+		db.Get(&osusumes2,"SELECT aws FROM gamelist inner join a_j on gamelist.gameid = a_j.gameid WHERE gamelist.gameid=? LIMIT 1",osusumes1[i].GameID)
+		osusumes = append(osusumes,Osusume{ osusumes1[i], osusumes2})
+	}
+	return c.JSON(http.StatusOK, osusumes)
+}
 
 func amazon(as string)(Ama Amazon) {
 	//スクレイピング対象URLを設定
@@ -478,16 +546,16 @@ func amazon(as string)(Ama Amazon) {
 		fmt.Printf("中古なし")
 		hontai = "中古なし"
 		souryo = "URLをクリックしてみたらあるかも"
-		Ama = Amazon{hontai,souryo,url,as}
+		Ama = Amazon{hontai,souryo,url}
 		
 	} else {
 		fmt.Println("Amazon：￥" + hontai[23:])
 		if len(souryo) < 6 {
 			fmt.Printf("送料無料")
-			Ama = Amazon{hontai[23:],"送料無料",url,as}
+			Ama = Amazon{"本体：￥" + hontai[23:],"送料無料",url}
 		} else {
 			fmt.Println("送料：￥" + souryo[7:])
-			Ama = Amazon{hontai[23:32],souryo[7:],url,as}
+			Ama = Amazon{"本体：￥" + hontai[23:],"送料：￥" + souryo[7:],url}
 		}
 		fmt.Printf("AmazonURL:" + url)
 	}
@@ -535,7 +603,7 @@ func surugaya(jan NullString) (Suru []Surugaya) {
 		//スクレイピング対象URLを設定
 		// Suru = make([]Surugaya, 0)
 		if !jan.Valid {			
-			Suru = append(Suru,Surugaya{"JAN不明",""})			
+			Suru = append(Suru,Surugaya{"駿河屋無し",""})			
 			return Suru
 		} else {
 			url := "https://www.suruga-ya.jp/search?category=&search_word=&bottom_detail_search_bookmark=1&gtin=" + jan.String + "&id_s=&jan10=&mpn="
