@@ -214,6 +214,7 @@ type AmaSuru struct{
 type Kekka struct {
 	GameID 		int `json:"gameid,omitempty" db:"gameid"`
 	GameName   	string `json:"gamename,omitempty"  db:"gamename"`
+	BrandID		int	 `json:"brandid,omitempty" db:"brandid"`
 	Brandname	NullString	 `json:"brandname,omitempty"  db:"brandname"`
 	Median		NullInt64	   `json:"median,omitempty"  db:"median"`
 	
@@ -400,7 +401,7 @@ func searchTitleHandler(c echo.Context) error {
 	word := req.Word
 	fmt.Printf(word)
 	kensaku := []Kekka{}
-	if err := db.Select(&kensaku,"SELECT gameid, gamename, brandname, gamelist.median FROM gamelist inner join brandlist on id = brandid WHERE gamename like ? order by gamelist.median desc","%" + word + "%" ); err != nil{
+	if err := db.Select(&kensaku,"SELECT gameid, gamename, brandid,brandname, gamelist.median FROM gamelist inner join brandlist on id = brandid WHERE gamename like ? order by gamelist.median desc","%" + word + "%" ); err != nil{
 		log.Printf("failed to ping by error '%#v'", err)
 	}
 	return c.JSON(http.StatusOK, kensaku)
@@ -411,7 +412,7 @@ func searchBrandHandler(c echo.Context) error {
 	c.Bind(&req)
 	word := req.Word
 	kensaku := []Kekka{}
-	db.Select(&kensaku,"SELECT gameid, gamename, brandname, gamelist.median FROM gamelist inner join brandlist on id = brandid WHERE brandname like ? order by gamelist.median desc","%" + word + "%" )
+	db.Select(&kensaku,"SELECT gameid, gamename, brandid,brandname, gamelist.median FROM gamelist inner join brandlist on id = brandid WHERE brandname like ? order by gamelist.median desc","%" + word + "%" )
 	return c.JSON(http.StatusOK, kensaku)
 }
 
@@ -421,7 +422,7 @@ func searchMedianHandler(c echo.Context) error {
 	word := req.Word
 	count2 := req.Count
 	kensaku := []Kekka{}
-	db.Select(&kensaku,"SELECT gameid, gamename, brandname, gamelist.median FROM gamelist inner join brandlist on id = brandid WHERE gamelist.median > ? and count2 > ? order by gamelist.median desc",word,count2 )
+	db.Select(&kensaku,"SELECT gameid, gamename, brandid,brandname, gamelist.median FROM gamelist inner join brandlist on id = brandid WHERE gamelist.median > ? and count2 > ? order by gamelist.median desc",word,count2 )
 	return c.JSON(http.StatusOK, kensaku)
 }
 
