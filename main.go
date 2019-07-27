@@ -320,7 +320,7 @@ func getIntentionHandler(c echo.Context) error {
 	userName := sess.Values["userName"]
 	conditions := []GameIntention{}
 	db.Select(&conditions,"SELECT gamelist.gameid, gamename, gamelist.median, intention,brandname FROM gamelist inner JOIN intention_table ON gamelist.gameid = intention_table.gameid inner join brandlist ON id=brandid WHERE username=?", userName)
-	fmt.Printf(conditions)
+	fmt.Println(conditions)
 
 	return c.JSON(http.StatusOK, conditions)
 }
