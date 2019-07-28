@@ -70,8 +70,8 @@ type Brand1 struct {
 }
 
 type Brand2 struct {
-	brandGame	[]Brand `json:"brandgame"`
-	brandinfo	Brand1 `json:"brandinfo"`
+	brandGame	[]Brand `json:"brandgame,omitempty"`
+	brandinfo	Brand1 `json:"brandinfo,omitempty"`
 }
 
 
