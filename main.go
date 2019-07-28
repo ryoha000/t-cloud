@@ -59,10 +59,19 @@ type Brand struct {
 	GameID      int    `json:"gameid,omitempty"  db:"gameid"`
 	GameName   	NullString `json:"gamename,omitempty"  db:"gamename"`
 	Sellday		NullString `json:"sellday,omitempty"  db:"sellday"`
+	Median		NullInt64	   `json:"median,omitempty"  db:"median"`
+}
+
+type Brand1 struct {
 	BrandName   	string `json:"brandname,omitempty"  db:"brandname"`
 	Median		NullInt64	   `json:"median,omitempty"  db:"median"`
 	URL			NullString	`json:"url,omitempty"  db:"url"`
 	Twitter			NullString	`json:"twitter,omitempty"  db:"twitter"`
+}
+
+type Brand2 struct {
+	brandGame	[]Brand `json:"brandgame"`
+	brandinfo	Brand1 `json:"brandinfo"`
 }
 
 
@@ -357,8 +366,12 @@ func getGameInfoHandler(c echo.Context) error {
 
 func getBrandInfoHandler(c echo.Context) error {
 	brandID := c.Param("brandID")
-	brand := []Brand{}
-	db.Select(&brand, "SELECT gameid, gamename, sellday, brandname, brandlist.median, url, twitter FROM gamelist inner join brandlist on brandid = id WHERE brandid=? order by gameid", brandID)
+	brandGame := []Brand{}
+	db.Select(&brandGame, "SELECT gameid, gamename, sellday, gamelist.median FROM gamelist inner join brandlist on brandid = id WHERE brandid=? order by gameid", brandID)
+	brandInfo := Brand1{}
+	db.Get(&brandInfo,"SELECT brandname, brandlist.median, url, twitter FROM brandlist where id=?",brandID)
+	brand := Brand2{brandGame,brandInfo}
+	// brand = append(brand,Brand2{brandGame,brandInfo})
 	return c.JSON(http.StatusOK, brand)
 }
 
