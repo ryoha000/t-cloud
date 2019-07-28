@@ -70,8 +70,8 @@ type Brand1 struct {
 }
 
 type Brand2 struct {
-	brandGame	[]Brand `json:"brandgame,omitempty"`
-	brandinfo	Brand1 `json:"brandinfo,omitempty"`
+	BrandGame	[]Brand `json:"brandgame,omitempty"`
+	Brandinfo	Brand1 `json:"brandinfo,omitempty"`
 }
 
 
@@ -371,8 +371,8 @@ func getBrandInfoHandler(c echo.Context) error {
 	brandInfo := Brand1{}
 	db.Get(&brandInfo,"SELECT brandname, brandlist.median, url, twitter FROM brandlist where id=?",brandID)
 	brand := Brand2{}
-	brand.brandGame = brandGame
-	brand.brandinfo = brandInfo
+	brand.BrandGame = brandGame
+	brand.Brandinfo = brandInfo
 	return c.JSON(http.StatusOK, brand)
 }
 
