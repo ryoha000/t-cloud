@@ -411,33 +411,51 @@ func leftButtonHandler(c echo.Context) error {
 }
 
 func searchTitleHandler(c echo.Context) error {
+	sess, err := session.Get("sessions", c)
+		if err != nil {
+			fmt.Println(err)
+			return c.String(http.StatusInternalServerError, "something wrong in getting session")
+		}
+	userName := sess.Values["userName"]
 	req := SearchRequestBody{}
 	c.Bind(&req)
 	word := req.Word
 	fmt.Printf(word)
 	kensaku := []Kekka{}
-	if err := db.Select(&kensaku,"SELECT gameid, gamename, brandid,brandname, gamelist.median FROM gamelist inner join brandlist on id = brandid WHERE gamename like ? order by gamelist.median desc","%" + word + "%" ); err != nil{
+	if err := db.Select(&kensaku,"SELECt gamelist.gameid, gamename,brandname,gamelist.median FROM gamelist inner join brandlist on id = brandid left join intention_table on intention_table.gameid = gamelist.gameid AND username=? WHERE gamename like ? and (intention<=>2 or intention<=>1 or intention<=>0 or intention<=>null) order by gamelist.median desc",userName,"%" + word + "%" ); err != nil{
 		log.Printf("failed to ping by error '%#v'", err)
 	}
 	return c.JSON(http.StatusOK, kensaku)
 }
 
 func searchBrandHandler(c echo.Context) error {
+	sess, err := session.Get("sessions", c)
+		if err != nil {
+			fmt.Println(err)
+			return c.String(http.StatusInternalServerError, "something wrong in getting session")
+		}
+	userName := sess.Values["userName"]
 	req := SearchRequestBody{}
 	c.Bind(&req)
 	word := req.Word
 	kensaku := []Kekka{}
-	db.Select(&kensaku,"SELECT gameid, gamename, brandid,brandname, gamelist.median FROM gamelist inner join brandlist on id = brandid WHERE brandname like ? order by gamelist.median desc","%" + word + "%" )
+	db.Select(&kensaku,"SELECt gamelist.gameid, gamename,brandname,gamelist.median FROM gamelist inner join brandlist on id = brandid left join intention_table on intention_table.gameid = gamelist.gameid AND username=? WHERE brandname like ? and (intention<=>2 or intention<=>1 or intention<=>0 or intention<=>null) order by gamelist.median desc",userName,"%" + word + "%" )
 	return c.JSON(http.StatusOK, kensaku)
 }
 
 func searchMedianHandler(c echo.Context) error {
+	sess, err := session.Get("sessions", c)
+		if err != nil {
+			fmt.Println(err)
+			return c.String(http.StatusInternalServerError, "something wrong in getting session")
+		}
+	userName := sess.Values["userName"]
 	req := SearchMRequestBody{}
 	c.Bind(&req)
 	word := req.Word
 	count2 := req.Count
 	kensaku := []Kekka{}
-	db.Select(&kensaku,"SELECT gameid, gamename, brandid,brandname, gamelist.median FROM gamelist inner join brandlist on id = brandid WHERE gamelist.median > ? and count2 > ? order by gamelist.median desc",word,count2 )
+	db.Select(&kensaku,"SELECt gamelist.gameid, gamename,brandname,gamelist.median FROM gamelist inner join brandlist on id = brandid left join intention_table on intention_table.gameid = gamelist.gameid AND username=? WHERE  gamelist.median > ? and count2 > ? and (intention<=>2 or intention<=>1 or intention<=>0 or intention<=>null) order by gamelist.median desc",userName,word,count2 )
 	return c.JSON(http.StatusOK, kensaku)
 }
 
