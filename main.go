@@ -198,7 +198,7 @@ type SearchMRequestBody struct {
 
 type OsusumeRequestBody struct {
 	GameID int `json:"gameid,omitempty"`
-	Message int `json:"message,omitempty"`
+	Message string `json:"message,omitempty"`
 }
 
 type ButtonRequestBody struct {
