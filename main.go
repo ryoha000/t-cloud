@@ -370,8 +370,9 @@ func getBrandInfoHandler(c echo.Context) error {
 	db.Select(&brandGame, "SELECT gameid, gamename, sellday, gamelist.median FROM gamelist inner join brandlist on brandid = id WHERE brandid=? order by gameid", brandID)
 	brandInfo := Brand1{}
 	db.Get(&brandInfo,"SELECT brandname, brandlist.median, url, twitter FROM brandlist where id=?",brandID)
-	brand := Brand2{brandGame,brandInfo}
-	// brand = append(brand,Brand2{brandGame,brandInfo})
+	brand := Brand2{}
+	brand.brandGame = brandGame
+	brand.brandinfo = brandInfo
 	return c.JSON(http.StatusOK, brand)
 }
 
